@@ -8,15 +8,18 @@
   "license": "MIT",
   "type": "project",
   "require": {
+     "projectcleverweb/color": "dev-master",
     "php": ">=5.6.4",
     "approached/laravel-image-optimizer": "^2.3",
     "dingo/api": "1.0.x@dev",
     "kartik-v/bootstrap-fileinput": "dev-master",
+    "kickbox/kickbox": "*",
     "laravel/framework": "5.4.*",
+    "laravel/socialite": "^3.0",
     "laravel/tinker": "~1.0",
     "pusher/pusher-php-server": "^3.0",
     "reliese/laravel": "^0.0.13",
-    "kickbox/kickbox": "*"
+	"zjango/laracurl": "dev-master"  
   },
   "require-dev": {
     "fzaninotto/faker": "~1.4",

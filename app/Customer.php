@@ -7,6 +7,8 @@
 
 namespace App;
 
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Reliese\Database\Eloquent\Model as Eloquent;
 
 /**
@@ -20,6 +22,8 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * @property string $address
  * @property string $gender
  * @property string $password
+ * @property string $provider
+ * @property int $provider_id
  * @property string $phoneNumber
  *
  * @property \Illuminate\Database\Eloquent\Collection $cartproducts
@@ -29,13 +33,13 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  *
  * @package App
  */
-class Customer extends Eloquent
+class Customer extends Authenticatable
 {
+    use Notifiable;
     protected $primaryKey = 'customerID';
-    public $timestamps = false;
 
     protected $hidden = [
-        'password'
+        'password', 'remember_token'
     ];
 
     protected $fillable = [
@@ -46,7 +50,9 @@ class Customer extends Eloquent
         'address',
         'password',
         'phoneNumber',
-        'gender'
+        'gender',
+        'provider',
+        'provider_id'
     ];
 
     public function cartproducts()
@@ -67,5 +73,10 @@ class Customer extends Eloquent
     public function feedback()
     {
         return $this->hasMany(\App\Feedback::class, 'customerID');
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(\App\Order::class, 'customerID');
     }
 }

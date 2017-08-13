@@ -2,7 +2,7 @@
 
 /**
  * Created by Reliese Model.
- * Date: Fri, 04 Aug 2017 00:46:51 +0000.
+ * Date: Tue, 08 Aug 2017 18:31:00 +0000.
  */
 
 namespace App;
@@ -13,13 +13,16 @@ use Reliese\Database\Eloquent\Model as Eloquent;
  * Class Order
  * 
  * @property int $orderID
+ * @property string $status
  * @property string $region
  * @property string $address
  * @property string $date
+ * @property int $customerID
  * 
+ * @property \App\Customer $customer
  * @property \Illuminate\Database\Eloquent\Collection $orderdetails
  *
- * @package App
+ * @package App\Models
  */
 class Order extends Eloquent
 {
@@ -28,14 +31,22 @@ class Order extends Eloquent
 	public $timestamps = false;
 
 	protected $casts = [
-		'orderID' => 'int'
+		'orderID' => 'int',
+		'customerID' => 'int'
 	];
 
 	protected $fillable = [
+		'status',
 		'region',
 		'address',
-		'date'
+		'date',
+		'customerID'
 	];
+
+	public function customer()
+	{
+		return $this->belongsTo(\App\Customer::class, 'customerID');
+	}
 
 	public function orderdetails()
 	{

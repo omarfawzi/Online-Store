@@ -3,6 +3,7 @@
 namespace App\Http;
 
 use App\Http\Middleware\CompanyMiddleware;
+use App\Http\Middleware\WebMiddleware;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
@@ -60,7 +61,5 @@ class Kernel extends HttpKernel
         'jwt.auth' => \Tymon\JWTAuth\Middleware\GetUserFromToken::class,
         'jwt.refresh' => \Tymon\JWTAuth\Middleware\RefreshToken::class,
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
-        'comapany'=> CompanyMiddleware::class,
-
     ];
 }

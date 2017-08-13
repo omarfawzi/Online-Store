@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Cartproduct;
 use App\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -16,8 +17,17 @@ class AppServiceProvider extends ServiceProvider
      *
      * @return void
      */
+    private $categories ;
+    public function setCategories()
+    {
+        $this->categories['Men'] = ['Shirts','T-Shirts','Trousers','Coats','Jackets','Footwear'];
+        $this->categories['Women'] = ['Dresses','Skirts','Shirts','T-Shirts','Trousers','Coats','Jackets','Footwear'];
+        $this->categories['Girls'] = ['Shirts','T-Shirts','Trousers','Coats','Jackets','Footwear','Pyjamas'];
+        $this->categories['Boys'] = ['Dresses','Skirts','Shirts','T-Shirts','Trousers','Coats','Jackets','Footwear','Pyjamas'];
+    }
     public function boot()
     {
+        $this->setCategories();
         Schema::defaultStringLength(191);
         \View::composer('*', function ($view) {
             if (Auth::check()) {
@@ -25,6 +35,19 @@ class AppServiceProvider extends ServiceProvider
                 $unseenCounter = count(Notification::where('userID', auth()->user()->id)->where('seen',0)->get());
                 $view->with('myNotifications', $myNotifications)->with('unseenCounter',$unseenCounter);
             }
+            if(Auth::guard('customer')->check()){
+                $cartProducts = Cartproduct::where('customerID',Auth::guard('customer')->user()->customerID)
+                    ->with(['product','product.colors','product.colors.images'=>function($query){
+                        $query->where('type','main');
+                    }])->get();
+                $cartTotalPrice = 0.0;
+                $itemsCount = count($cartProducts);
+                foreach ($cartProducts as $cartProduct){
+                    $cartTotalPrice += $cartProduct->product->price * $cartProduct->quantity;
+                }
+                $view->with('cartProducts',$cartProducts)->with('cartTotalPrice',$cartTotalPrice)->with('cartItemsCount',$itemsCount);
+            }
+            $view->with('categoriesWeb',$this->categories);
         });
     }
 

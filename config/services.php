@@ -34,5 +34,10 @@ return [
         'key' => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),
     ],
+    'facebook' => [
+        'client_id' => '1737088666593840',
+        'client_secret' => '55baf45f39c0970ccc6124c4b393e6ad',
+        'redirect' => 'http://vamos.comeze.com/auth/facebook/callback',
+    ],
 
 ];

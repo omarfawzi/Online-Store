@@ -5,7 +5,7 @@
       <webServer id="626042b5-a012-4b3d-8908-28e92f454bf3" name="vamos" url="http://vamos-dev.esy.es/">
         <fileTransfer host="files.000webhost.com" port="21">
           <advancedOptions>
-            <advancedOptions dataProtectionLevel="Private" />
+            <advancedOptions compatibilityMode="true" dataProtectionLevel="Private" passiveMode="true" />
           </advancedOptions>
           <option name="port" value="21" />
         </fileTransfer>
