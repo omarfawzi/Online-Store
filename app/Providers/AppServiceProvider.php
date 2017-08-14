@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Cartproduct;
 use App\Notification;
+use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
@@ -37,15 +38,13 @@ class AppServiceProvider extends ServiceProvider
             }
             if(Auth::guard('customer')->check()){
                 $cartProducts = Cartproduct::where('customerID',Auth::guard('customer')->user()->customerID)
-                    ->with(['product','product.colors','product.colors.images'=>function($query){
-                        $query->where('type','main');
-                    }])->get();
+                    ->with(['product'])->get();
                 $cartTotalPrice = 0.0;
                 $itemsCount = count($cartProducts);
                 foreach ($cartProducts as $cartProduct){
                     $cartTotalPrice += $cartProduct->product->price * $cartProduct->quantity;
                 }
-                $view->with('cartProducts',$cartProducts)->with('cartTotalPrice',$cartTotalPrice)->with('cartItemsCount',$itemsCount);
+                $view->with('cartTotalPrice',$cartTotalPrice)->with('cartItemsCount',$itemsCount);
             }
             $view->with('categoriesWeb',$this->categories);
         });

@@ -40,6 +40,10 @@ class Color extends Eloquent
 	{
 		return $this->belongsTo(\App\Product::class, 'productID');
 	}
+    public function cartproducts()
+    {
+        return $this->hasMany(\App\Cartproduct::class, 'colorID');
+    }
 
 	public function sizes()
 	{

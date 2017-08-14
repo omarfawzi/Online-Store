@@ -19,14 +19,18 @@ Route::group(['prefix'=>'/'],function(){
     Route::group(['prefix'=>'products'],function (){
         Route::get('{gender}/{categoryName}','WebController@categoryProducts')->name('categoryProducts');
         Route::get('{supplierName}','WebController@supplierProducts')->name('supplierProducts');
-        Route::get('/','WebController@filterProducts')->name('filterProducts');
     });
     Route::get('product/{productName}/{colorID}','WebController@product')->name('singleProduct');
     Route::group(['middleware'=>'App\Http\Middleware\WebMiddleware'],function(){
         Route::post('addToCart','WebController@addToCart')->name('addToCart');
         Route::get('myCart','WebController@myCart')->name('myCart');
         Route::get('removeCartProduct','WebController@removeCartProduct')->name('removeCartProduct');
+        Route::get('cartQuantity','WebController@cartQuantity')->name('cartQuantity');
+        Route::get('myOrders','WebController@myOrders')->name('myOrders');
+        Route::get('emptyCart','WebController@emptyCart')->name('emptyCart');
     });
+    Route::get('sortList','WebController@sortList')->name('sortList');
+    Route::get('filterProducts','WebController@filterProducts')->name('filterProducts');
 });
 // AdminPanel's routes
 Route::group(['prefix'=>'admin'],function (){

@@ -33,5 +33,10 @@ class Size extends Eloquent
 		return $this->belongsToMany(\App\Color::class, 'colorsizes', 'sizeID', 'colorID')
 					->withPivot('availableUnits');
 	}
+    public function cartproducts()
+    {
+        return $this->hasMany(\App\Cartproduct::class, 'sizeID');
+    }
+
 
 }

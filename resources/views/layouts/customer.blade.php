@@ -24,6 +24,10 @@
     <link href="{{asset('assets/website/css/fasthover.css')}}" rel="stylesheet" type="text/css" media="all"/>
     <!-- js -->
     <script src="{{asset('assets/website/js/jquery.min.js')}}"></script>
+    <script src="{{asset('assets/website/js/pagination.js')}}"></script>
+    <script src="{{asset('assets/admin/js/bootstrap-notify.js')}}"></script>
+
+    <script src="{{asset('assets/admin/js/demo.js')}}"></script>
 
     <!-- //js -->
     <!-- countdown -->
@@ -286,33 +290,54 @@
             <div class="w3l_logo">
             <h1><a href="{{route('index')}}">Fashion<span>For Fashion Lovers</span></a></h1>
             </div>
-        <div class="search">
-            <input class="search_box" type="checkbox" id="search_box">
-            <label class="icon-search" for="search_box"><span class="glyphicon glyphicon-search"
-                                                              aria-hidden="true"></span></label>
-            <div class="search_form">
-                <form action="#" method="post">
-                    <input type="text" name="Search" placeholder="Search...">
-                    <input type="submit" value="Send">
-                </form>
-            </div>
-        </div>
+        {{--<div class="search">--}}
+            {{--<input class="search_box" type="checkbox" id="search_box">--}}
+            {{--<label class="icon-search" for="search_box"><span class="glyphicon glyphicon-search"--}}
+                                                              {{--aria-hidden="true"></span></label>--}}
+            {{--<div class="search_form">--}}
+                {{--<form action="#" method="post">--}}
+                    {{--<input type="text" name="Search" placeholder="Search...">--}}
+                    {{--<input type="submit" value="Send">--}}
+                {{--</form>--}}
+            {{--</div>--}}
+        {{--</div>--}}
         <div class="cart box_1">
-            <a id="myCart" href="#">
+            <a id="myCart" href="javascript:;">
                 <div class="total">
                     EGP
                     @if(Auth::guard('customer')->check())
                     <span id="cartTotalMoney">{{$cartTotalPrice}}</span> (<span id="cartTotalItems">{{$cartItemsCount}}</span> items)
                     @else
                         <span id="cartTotalMoney">0.00</span> (<span id="cartTotalItems">0</span> items)
-
                     @endif
                 </div>
                 <img src="{{asset('assets/website/images/bag.png')}}" alt=""/>
             </a>
+            <p><a href="javascript:;" id="emptyCart" class="simpleCart_empty" >Empty Cart</a></p>
             <div class="clearfix"></div>
         </div>
-        <div class="clearfix"></div>
+            <div class="clearfix"></div>
+        <script>
+            $('#emptyCart').click(function () {
+                var itemsCount = parseInt($('#cartTotalItems').text());
+                $.ajax({
+                    type: 'GET',
+                    url: '{{route('emptyCart')}}',
+                    data: {},
+                    success: function (data) {
+                        $('#totalPrice').text(0);
+                        $('#cartTotalMoney').text('0.00');
+                        $('#cartTotalItems').text(0);
+                        for (var i = 1 ; i <= itemsCount ; i++ ) {
+                            $('.rem' + i).remove();
+                            $('#list' + (i - 1)).remove();
+                        }
+
+                        $('#shoppingItemsNumber').text(0);
+                    }
+                });
+            });
+        </script>
     </div>
 </div>
 <script>
@@ -343,34 +368,44 @@
                 <ul class="nav navbar-nav">
                     <li class="active"><a href="{{route('index')}}" class="{{(Route::getCurrentRoute()->getName() == 'index')?'act':''}}">Home</a></li>
                     <!-- Mega Menu -->
+                    @foreach($categoriesWeb as $key => $category)
                         <li class="dropdown">
-                            <a href="#" class="dropdown-toggle {{(Route::getCurrentRoute()->getName() == 'supplierProducts'||Route::getCurrentRoute()->getName() == 'categoryProducts'||Route::getCurrentRoute()->getName() == 'singleProduct')?'act':''}}"  data-toggle="dropdown">Products<b class="caret"></b></a>
+                            <a href="#" class="dropdown-toggle"  data-toggle="dropdown">{{$key}}<b class="caret"></b></a>
                             <ul class="dropdown-menu multi-column columns-3">
                                 <div class="row">
-                                    @foreach($categoriesWeb as $key => $category)
                                     <div class="col-sm-3">
                                         <ul class="multi-column-dropdown">
-                                            <h6>{{$key}}</h6>
+                                            <h6>Categories</h6>
                                             @foreach($category as $value)
                                             <li><a href="{{route('categoryProducts',['gender'=>$key,'categoryName'=>$value])}}">{{$value}}</a></li>
                                             @endforeach
-                                            <br>
-                                            @if($key == 'Men')
+                                        </ul>
+                                    </div>
+
+                                    <div class="col-sm-9">
+                                        <ul class="multi-column-dropdown">
+                                        @if($key == 'Men')
+                                            <li>
                                                 <img src="http://www.menstylefashion.com/wp-content/uploads/2016/02/Italian-Men-Fashion-Sense-Sunglasses-and-cup-of-Coffee.jpg" class="img-responsive">
+                                            </li>
+                                        @endif
+                                        @if($key == 'Women')
+                                            <li>
+                                            <img src="http://www.michellebelau.ae/img/collection/wrinkeled-coat-ivory-michelle-belau.jpg" class="img-responsive">
+                                            </li>
                                             @endif
-                                            @if($key == 'Women')
-                                                <img src="http://www.michellebelau.ae/img/collection/wrinkeled-coat-ivory-michelle-belau.jpg" class="img-responsive">
-                                            @endif
-                                            @if($key == 'Girls')
-                                                <img src="https://s-media-cache-ak0.pinimg.com/736x/24/ca/b6/24cab6e05caa6c08afb4f524ca8584ad--outfits-for-school-for-kids-girls-tennis-outfits.jpg" class="img-responsive">
-                                                <br>
-                                            @endif
-                                            @if($key == 'Boys')
-                                                <img src="https://s-media-cache-ak0.pinimg.com/736x/ea/16/cc/ea16cce8aa9334eabe1f1b666db70a74--little-boy-style-boys-style.jpg" class="img-responsive">
+                                        @if($key == 'Girls')
+                                            <li>
+                                            <img src="https://s-media-cache-ak0.pinimg.com/736x/24/ca/b6/24cab6e05caa6c08afb4f524ca8584ad--outfits-for-school-for-kids-girls-tennis-outfits.jpg" class="img-responsive">
+                                            </li>
+                                                @endif
+                                        @if($key == 'Boys')
+                                            <li>
+                                            <img src="https://s-media-cache-ak0.pinimg.com/736x/ea/16/cc/ea16cce8aa9334eabe1f1b666db70a74--little-boy-style-boys-style.jpg" class="img-responsive">
+                                            </li>
                                             @endif
                                         </ul>
                                     </div>
-                                    @endforeach
 
                                     {{--<div class="col-sm-4">--}}
                                         {{--<div class="w3ls_products_pos">--}}
@@ -382,17 +417,35 @@
                                 </div>
                             </ul>
                         </li>
+                    @endforeach
+
                     <li><a href="about.html">About Us</a></li>
-                    <li><a href="short-codes.html">Short Codes</a></li>
-                    <li><a href="mail.html">Mail Us</a></li>
                 </ul>
             </div>
         </nav>
     </div>
 </div>
-<img src="http://www.digi-karma.com/wp-content/uploads/2017/07/635980679147435890-488367249_FashionHeader.png" height="550px" width="100%">
-
+<div class="banner" id="home1">
+    <div class="container">
+        <h3>fashions fade, <span>style is eternal</span></h3>
+    </div>
+</div>
 @yield('content')
+<div class="newsletter">
+    <div class="container">
+        <div class="col-md-6 w3agile_newsletter_left">
+            <h3>Email us</h3>
+            <p>We will reach you as soon as possible</p>
+        </div>
+        <div class="col-md-6 w3agile_newsletter_right">
+            <form action="#" method="post">
+                <input type="email" name="Email" value="Email" onfocus="this.value = '';" onblur="if (this.value == '') {this.value = 'Email';}" required="">
+                <input type="submit" value="">
+            </form>
+        </div>
+        <div class="clearfix"> </div>
+    </div>
+</div>
 <div class="footer">
     <div class="container">
         <div class="w3_footer_grids">

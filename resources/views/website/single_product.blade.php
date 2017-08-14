@@ -42,7 +42,7 @@
             <form id="singleForm" method="POST" action="{{route('addToCart')}}">
                 {{csrf_field()}}
                 <input type="hidden" name="productID" value="{{$product->productID}}">
-            <div class="col-md-8 single-right">
+            <div class="col-md-3 single-right">
                 <h3>{{$product->productName}}</h3>
                 <div class="rating1">
 					<span class="starRating">
@@ -96,19 +96,18 @@
                 <div class="occasional">
                     <h5>Size</h5>
                     <div class="w3ls_dresses_grid_right_grid2">
-                        <select name="size" class="select_item">
+                        <select name="sizeID" class="select_item">
                         @foreach($product->colors[0]->sizes as $size)
-                                <option value="{{$size}}">{{$size->size}}</option>
+                                <option value="{{$size->sizeID}}">{{$size->size}}</option>
                             @endforeach
                         </select>
                     </div>
                 </div>
                 <div class="simpleCart_shelfItem">
-                    <p>EGP{{$product->price}}</p>
+                    <p>EGP &nbsp;{{$product->price}}</p>
                     <input name="price" value="{{$product->price}}" type="hidden">
-                    <input type="button" class="btn btn-danger" id="addToCart" value="ADD TO CART">
+                    <input type="button" style="width: 200px" class="btn btn-danger" id="addToCart" value="ADD TO CART">
                 </div>
-
                 <script>
                     $('#addToCart').click(function () {
                         @if(!Auth::guard('customer')->check())
@@ -118,36 +117,51 @@
                         @endif
                     });
                 </script>
-
             </div>
             </form>
+            <div class="col-md-5 single-right">
+                <div class="sap_tabs">
+                    <div id="horizontalTab1" style="display: block; width: 100%; margin: 0px;">
+                        <ul>
+                            <li class="resp-tab-item" aria-controls="tab_item-0" role="tab"><span>Product Information</span></li>
+                        </ul>
+                        <div class="tab-1 resp-tab-content additional_info_grid" aria-labelledby="tab_item-0">
+                            <h3>{{$product->productName}}</h3>
+                            <h5>Brand : {{$product->brand}}</h5>
+                            <br>
+                            <h5>Description : {{(strlen($product->description)==0)?'None':''}}{{$product->description}}</h5>
+                        </div>
+                    </div>
+                </div>
+                <script src="{{asset('assets/website/js/easyResponsiveTabs.js')}}" type="text/javascript"></script>
+                <script type="text/javascript">
+                    $(document).ready(function () {
+                        $('#horizontalTab1').easyResponsiveTabs({
+                            type: 'default', //Types: default, vertical, accordion
+                            width: 'auto', //auto or any width like 600px
+                            fit: true   // 100% fit in a container
+                        });
+                    });
+                </script>
+            </div>
             <div class="clearfix"> </div>
         </div>
     </div>
 
-    <div class="additional_info">
-        <div class="container">
-            <div class="sap_tabs">
-                <div id="horizontalTab1" style="display: block; width: 100%; margin: 0px;">
-                    <ul>
-                        <li class="resp-tab-item" aria-controls="tab_item-0" role="tab"><span>Product Information</span></li>
-                    </ul>
-                    <div class="tab-1 resp-tab-content additional_info_grid" aria-labelledby="tab_item-0">
-                        <h3>{{$product->productName}}</h3>
-                        <p>{{(strlen($product->description)==0)?'None':''}}{{$product->description}}</p>
-                    </div>
-                </div>
-            </div>
-            <script src="{{asset('assets/website/js/easyResponsiveTabs.js')}}" type="text/javascript"></script>
-            <script type="text/javascript">
-                $(document).ready(function () {
-                    $('#horizontalTab1').easyResponsiveTabs({
-                        type: 'default', //Types: default, vertical, accordion
-                        width: 'auto', //auto or any width like 600px
-                        fit: true   // 100% fit in a container
-                    });
-                });
-            </script>
-        </div>
-    </div>
+    {{--<div class="additional_info">--}}
+        {{--<div class="container">--}}
+            {{--<div class="sap_tabs">--}}
+                {{--<div id="horizontalTab1" style="display: block; width: 100%; margin: 0px;">--}}
+                    {{--<ul>--}}
+                        {{--<li class="resp-tab-item" aria-controls="tab_item-0" role="tab"><span>Product Information</span></li>--}}
+                    {{--</ul>--}}
+                    {{--<div class="tab-1 resp-tab-content additional_info_grid" aria-labelledby="tab_item-0">--}}
+                        {{--<h3>{{$product->productName}}</h3>--}}
+                        {{--<p>{{(strlen($product->description)==0)?'None':''}}{{$product->description}}</p>--}}
+                    {{--</div>--}}
+                {{--</div>--}}
+            {{--</div>--}}
+
+        {{--</div>--}}
+    {{--</div>--}}
 @endsection
