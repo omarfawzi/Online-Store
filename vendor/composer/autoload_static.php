@@ -352,6 +352,10 @@ class ComposerStaticInit8b0b72571d32e3b09ac0b707df34472b
         ),
     );
 
+    public static $fallbackDirsPsr4 = array (
+        0 => __DIR__ . '/..' . '/league/color-extractor/src',
+    );
+
     public static $prefixesPsr0 = array (
         'X' => 
         array (
@@ -435,6 +439,7 @@ class ComposerStaticInit8b0b72571d32e3b09ac0b707df34472b
         'App\\Cartproduct' => __DIR__ . '/../..' . '/app/Cartproduct.php',
         'App\\Category' => __DIR__ . '/../..' . '/app/Category.php',
         'App\\Color' => __DIR__ . '/../..' . '/app/Color.php',
+        'App\\ColorConverter' => __DIR__ . '/../..' . '/app/ColorConverter.php',
         'App\\Colorsize' => __DIR__ . '/../..' . '/app/Colorsize.php',
         'App\\Complain' => __DIR__ . '/../..' . '/app/Complain.php',
         'App\\Console\\Kernel' => __DIR__ . '/../..' . '/app/Console/Kernel.php',
@@ -442,8 +447,8 @@ class ComposerStaticInit8b0b72571d32e3b09ac0b707df34472b
         'App\\Exceptions\\Handler' => __DIR__ . '/../..' . '/app/Exceptions/Handler.php',
         'App\\Favourite' => __DIR__ . '/../..' . '/app/Favourite.php',
         'App\\Feedback' => __DIR__ . '/../..' . '/app/Feedback.php',
+        'App\\Http\\Controllers\\APIController' => __DIR__ . '/../..' . '/app/Http/Controllers/APIController.php',
         'App\\Http\\Controllers\\AdminController' => __DIR__ . '/../..' . '/app/Http/Controllers/AdminController.php',
-        'App\\Http\\Controllers\\AndroidController' => __DIR__ . '/../..' . '/app/Http/Controllers/AndroidController.php',
         'App\\Http\\Controllers\\Auth\\ForgotPasswordController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/ForgotPasswordController.php',
         'App\\Http\\Controllers\\Auth\\LoginController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/LoginController.php',
         'App\\Http\\Controllers\\Auth\\RegisterController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/RegisterController.php',
@@ -454,12 +459,12 @@ class ComposerStaticInit8b0b72571d32e3b09ac0b707df34472b
         'App\\Http\\Controllers\\WebRegisterController' => __DIR__ . '/../..' . '/app/Http/Controllers/WebRegisterController.php',
         'App\\Http\\Kernel' => __DIR__ . '/../..' . '/app/Http/Kernel.php',
         'App\\Http\\Middleware\\AdminMiddleware' => __DIR__ . '/../..' . '/app/Http/Middleware/AdminMiddleware.php',
-        'App\\Http\\Middleware\\AndroidMiddleware' => __DIR__ . '/../..' . '/app/Http/Middleware/AndroidMiddleware.php',
         'App\\Http\\Middleware\\CompanyMiddleware' => __DIR__ . '/../..' . '/app/Http/Middleware/CompanyMiddleware.php',
         'App\\Http\\Middleware\\EncryptCookies' => __DIR__ . '/../..' . '/app/Http/Middleware/EncryptCookies.php',
         'App\\Http\\Middleware\\RedirectIfAuthenticated' => __DIR__ . '/../..' . '/app/Http/Middleware/RedirectIfAuthenticated.php',
         'App\\Http\\Middleware\\TrimStrings' => __DIR__ . '/../..' . '/app/Http/Middleware/TrimStrings.php',
         'App\\Http\\Middleware\\VerifyCsrfToken' => __DIR__ . '/../..' . '/app/Http/Middleware/VerifyCsrfToken.php',
+        'App\\Http\\Middleware\\WebMiddleware' => __DIR__ . '/../..' . '/app/Http/Middleware/WebMiddleware.php',
         'App\\Image' => __DIR__ . '/../..' . '/app/Image.php',
         'App\\ImgCompressor' => __DIR__ . '/../..' . '/app/ImgCompressor.php',
         'App\\Notification' => __DIR__ . '/../..' . '/app/Notification.php',
@@ -2250,6 +2255,9 @@ class ComposerStaticInit8b0b72571d32e3b09ac0b707df34472b
         'Laravel\\Tinker\\Console\\TinkerCommand' => __DIR__ . '/..' . '/laravel/tinker/src/Console/TinkerCommand.php',
         'Laravel\\Tinker\\TinkerCaster' => __DIR__ . '/..' . '/laravel/tinker/src/TinkerCaster.php',
         'Laravel\\Tinker\\TinkerServiceProvider' => __DIR__ . '/..' . '/laravel/tinker/src/TinkerServiceProvider.php',
+        'League\\ColorExtractor\\Color' => __DIR__ . '/..' . '/league/color-extractor/src/League/ColorExtractor/Color.php',
+        'League\\ColorExtractor\\ColorExtractor' => __DIR__ . '/..' . '/league/color-extractor/src/League/ColorExtractor/ColorExtractor.php',
+        'League\\ColorExtractor\\Palette' => __DIR__ . '/..' . '/league/color-extractor/src/League/ColorExtractor/Palette.php',
         'League\\Flysystem\\AdapterInterface' => __DIR__ . '/..' . '/league/flysystem/src/AdapterInterface.php',
         'League\\Flysystem\\Adapter\\AbstractAdapter' => __DIR__ . '/..' . '/league/flysystem/src/Adapter/AbstractAdapter.php',
         'League\\Flysystem\\Adapter\\AbstractFtpAdapter' => __DIR__ . '/..' . '/league/flysystem/src/Adapter/AbstractFtpAdapter.php',
@@ -4204,6 +4212,7 @@ class ComposerStaticInit8b0b72571d32e3b09ac0b707df34472b
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInit8b0b72571d32e3b09ac0b707df34472b::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInit8b0b72571d32e3b09ac0b707df34472b::$prefixDirsPsr4;
+            $loader->fallbackDirsPsr4 = ComposerStaticInit8b0b72571d32e3b09ac0b707df34472b::$fallbackDirsPsr4;
             $loader->prefixesPsr0 = ComposerStaticInit8b0b72571d32e3b09ac0b707df34472b::$prefixesPsr0;
             $loader->classMap = ComposerStaticInit8b0b72571d32e3b09ac0b707df34472b::$classMap;
 

@@ -296,7 +296,7 @@ ul.multi-column-dropdown h6 {
 /*-- //navigation --*/
 /*-- banner --*/
 .banner{
-	background:url(../images/b1.jpg) no-repeat 0px 0px;
+	background:url(../images/as-reshare.jpg) no-repeat 0px 0px;
 /*-- w3layouts --*/
 	background-size:cover;
 	-webkit-background-size:cover;
@@ -2598,6 +2598,22 @@ td.invert-image a img {
 	background:#ff9b05;
 }
 .checkout-right-basket a span {
+    left: -.5em;
+    top: 0.1em;
+}
+
+.anchor a{
+    padding:10px 30px;
+    color:#fff;
+    font-size:1em;
+    background:#212121;
+    text-decoration:none;
+    float: right;
+}
+.anchor a:hover{
+    background:#ff9b05;
+}
+.anchor a span {
     left: -.5em;
     top: 0.1em;
 }

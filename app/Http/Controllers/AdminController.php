@@ -8,6 +8,8 @@ use App\Color;
 use App\Colorsize;
 use App\Favourite;
 use App\Image;
+use App\Order;
+use App\Orderdetail;
 use App\Product;
 use App\Size;
 use App\Supplier;
@@ -32,6 +34,7 @@ class AdminController extends Controller
     private $previousRoute;
     private $productsImages;
     private $logosImages;
+
     // default sizes
     public function sizes()
     {
@@ -49,7 +52,7 @@ class AdminController extends Controller
         $this->clothesSizes['Women']['Coats'] = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL'];
         $this->clothesSizes['Women']['Jackets'] = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL'];
         $this->clothesSizes['Women']['Footwear'] = ['36', '37', '38', '39', '40', '41'];
-         $this->clothesSizes['Girls']['Shirts'] = ['XS', 'S', 'M', 'L', 'XL'];
+        $this->clothesSizes['Girls']['Shirts'] = ['XS', 'S', 'M', 'L', 'XL'];
         $this->clothesSizes['Girls']['T-Shirts'] = ['XS', 'S', 'M', 'L', 'XL'];
         $this->clothesSizes['Girls']['Skirts'] = ['XS', 'S', 'M', 'L', 'XL'];
         $this->clothesSizes['Girls']['Trousers'] = ['XS', 'S', 'M', 'L', 'XL'];
@@ -78,7 +81,7 @@ class AdminController extends Controller
         // previous route
         $this->previousRoute = app('router')->getRoutes()->match(app('request')->create(URL::previous()))->getName();
         $setting = array(
-            'directory' =>  $this->productsImages, // directory file compressed output
+            'directory' => $this->productsImages, // directory file compressed output
             'file_type' => array( // file format allowed
                 'image/jpeg',
                 'image/png',
@@ -110,7 +113,7 @@ class AdminController extends Controller
     {
         if (auth()->user()->type == 'admin') {
             $companies = User::where('type', 'company')->paginate(10);
-            return view('adminPanel.admin_home', ['companies' => $companies]);
+            return view('adminPanel.companies', ['companies' => $companies]);
         } else {
             return redirect(route('ApprovedProducts'));
         }
@@ -156,69 +159,63 @@ class AdminController extends Controller
     // Approved Products View
     public function ApprovedProducts()
     {
-        if (auth()->user()->type == 'admin') {
-            $products = Product::with(['category', 'supplier', 'colors' => function ($q) {
-                $q->where('productStatus', '1');
-            }])->orderBy('productID')->paginate(10);
-            $allProducts = Product::with(['category', 'supplier', 'colors' => function ($q) {
-                $q->where('productStatus', '1');
-            }])->orderBy('productID')->get();
-            return view('adminPanel.all_products_view', ['products' => $products, 'allProducts' => $allProducts]);
+        $allProducts = $this->getAllProducts(1);
+        $products = null;
+        if (count($allProducts) == 0) {
+            $products = [];
         } else {
-            $products = Product::with(['category', 'supplier', 'colors' => function ($q) {
-                $q->where('productStatus', '1');
-            }])->where('supplierID', auth()->user()->id)->paginate(10);
-            $allProducts = Product::with(['category', 'supplier', 'colors' => function ($q) {
-                $q->where('productStatus', '1');
-            }])->where('supplierID', auth()->user()->id)->get();
-            return view('adminPanel.company_home', ['products' => $products, 'allProducts' => $allProducts]);
+            $products = Product::with(['supplier', 'colors', 'category'])->where(function ($query) use ($allProducts) {
+                foreach ($allProducts as $key => $product) {
+                    if ($key == 0) {
+                        $query->where('productID', $product->productID);
+                    } else
+                        $query->orWhere('productID', $product->productID);
+                }
+            })->paginate(10);
         }
+        return view('adminPanel.products', ['products' => $products, 'allProducts' => $allProducts]);
     }
 
     // Waiting Products View
 
     public function WaitingProducts()
     {
-        if (auth()->user()->type == 'admin') {
-            $products = Product::with(['category', 'supplier', 'colors' => function ($q) {
-                $q->where('productStatus', '0');
-            }])->orderBy('productID')->paginate(10);
-            $allProducts = Product::with(['category', 'supplier', 'colors' => function ($q) {
-                $q->where('productStatus', '0');
-            }])->orderBy('productID')->get();
-            return view('adminPanel.all_products_view', ['products' => $products, 'allProducts' => $allProducts]);
+        $allProducts = $this->getAllProducts(0);
+        $products = null;
+        if (count($allProducts) == 0) {
+            $products = [];
         } else {
-            $products = Product::with(['category', 'supplier', 'colors' => function ($q) {
-                $q->where('productStatus', '0');
-            }])->where('supplierID', auth()->user()->id)->paginate(10);
-            $allProducts = Product::with(['category', 'supplier', 'colors' => function ($q) {
-                $q->where('productStatus', '0');
-            }])->where('supplierID', auth()->user()->id)->get();
-            return view('adminPanel.company_home', ['products' => $products, 'allProducts' => $allProducts]);
+            $products = Product::with(['supplier', 'colors', 'category'])->where(function ($query) use ($allProducts) {
+                foreach ($allProducts as $key => $product) {
+                    if ($key == 0) {
+                        $query->where('productID', $product->productID);
+                    } else
+                        $query->orWhere('productID', $product->productID);
+                }
+            })->paginate(10);
         }
+        return view('adminPanel.products', ['products' => $products, 'allProducts' => $allProducts]);
     }
 
     // Rejected Products View
 
     public function RejectedProducts()
     {
-        if (auth()->user()->type == 'admin') {
-            $products = Product::with(['category', 'supplier', 'colors' => function ($q) {
-                $q->where('productStatus', '2');
-            }])->orderBy('productID')->paginate(10);
-            $allProducts = Product::with(['category', 'supplier', 'colors' => function ($q) {
-                $q->where('productStatus', '2');
-            }])->orderBy('productID')->get();
-            return view('adminPanel.all_products_view', ['products' => $products, 'allProducts' => $allProducts]);
+        $allProducts = $this->getAllProducts(2);
+        $products = null;
+        if (count($allProducts) == 0) {
+            $products = [];
         } else {
-            $products = Product::with(['category', 'supplier', 'colors' => function ($q) {
-                $q->where('productStatus', '2');
-            }])->where('supplierID', auth()->user()->id)->paginate(10);
-            $allProducts = Product::with(['category', 'supplier', 'colors' => function ($q) {
-                $q->where('productStatus', '2');
-            }])->where('supplierID', auth()->user()->id)->get();
-            return view('adminPanel.company_home', ['products' => $products, 'allProducts' => $allProducts]);
+            $products = Product::with(['supplier', 'colors', 'category'])->where(function ($query) use ($allProducts) {
+                foreach ($allProducts as $key => $product) {
+                    if ($key == 0) {
+                        $query->where('productID', $product->productID);
+                    } else
+                        $query->orWhere('productID', $product->productID);
+                }
+            })->paginate(10);
         }
+        return view('adminPanel.products', ['products' => $products, 'allProducts' => $allProducts]);
     }
 
     // add new color view
@@ -229,80 +226,85 @@ class AdminController extends Controller
             $product = Product::with(['category'])->where('productID', $productID)->first();
             if (!$product)
                 return back();
-            return view('adminPanel.product_new_color', ['product' => $product, 'clothesSizes' => $this->clothesSizes]);
+            return view('adminPanel.add_new_color', ['product' => $product, 'clothesSizes' => $this->clothesSizes]);
         } catch (DecryptException $e) {
             return back();
         }
     }
 
     // single product view
-    public function product($productID, $colorID)
+    public function product($productName, $colorID, Request $request)
     {
-        try {
-            $colorID = decrypt($colorID);
-            $notifications = Notification::where('colorID', $colorID)->where('userID', auth()->user()->id)->get();
-            foreach ($notifications as $notification) {
-                $notification->seen = true;
-                $notification->update();
-            }
-            $color = Color::find($colorID);
-            $productID = decrypt($productID);
-            $categories = Category::all();
-            $otherColors = Color::where('productID', $productID)->where('colorID', '!=', $colorID)->get();
-            $product = Product::with(['category', 'supplier', 'colors' => function ($q) use ($color) {
-                $q->where('colorID', $color->colorID);
-            }, 'colors.images', 'colors.sizes'])->where('productID', $productID)->first();
-            if (!$product)
-                return redirect($this->defaultRedirection);
-            $mainImage = Image::with('color')->where('colorID', $colorID)->where('type', 'main')->first();
-            if ($mainImage) {
-                for ($i = 1; $i < count($product->colors[0]->images); $i++) {
-                    if ($product->colors[0]->images[$i]->imageID == $mainImage->imageID) {
-                        $temp = $product->colors[0]->images[$i];
-                        $product->colors[0]->images[$i] = $product->colors[0]->images[0];
-                        $product->colors[0]->images[0] = $temp;
-                        break;
-                    }
-                }
-            } else {
-                if (count($product->colors[0]->images) > 0) {
-                    $product->colors[0]->images[0]->type = 'main';
-                    $product->colors[0]->images[0]->update();
-                    $mainImage = Image::with('color')->where('colorID', $colorID)->where('type', 'main')->first();
-                }
-            }
-            return view('adminPanel.single_product_view', ['otherColors' => $otherColors, 'product' => $product, 'colour' => $color, 'categories' => $categories, 'mainImage' => $mainImage, 'clothesSizes' => $this->clothesSizes]);
-        } catch (DecryptException $e) {
-            return back();
+        //  dd($colorID.' '.$request->colorID);
+        // try {
+        //$colorID = decrypt($colorID);
+        $notifications = Notification::where('colorID', $colorID)->where('userID', Auth::guard('web')->user()->id)->get();
+        foreach ($notifications as $notification) {
+            $notification->seen = true;
+            $notification->update();
         }
+        $productID = Product::where('productName', $productName)->first();
+        if ($productID)
+            $productID = $productID->productID;
+        $color = Color::find($colorID);
+        //$productID = decrypt($productID);
+        $categories = Category::all();
+        $otherColors = Color::where('productID', $productID)->where('colorID', '!=', $colorID)->get();
+        $product = Product::with(['category', 'supplier', 'colors' => function ($q) use ($colorID) {
+            $q->where('colorID', $colorID);
+        }, 'colors.images', 'colors.sizes'])->where('productID', $productID)->first();
+        if (!$product)
+            return redirect($this->defaultRedirection);
+        $mainImage = Image::with('color')->where('colorID', $colorID)->where('type', 'main')->first();
+        if ($mainImage) {
+            for ($i = 1; $i < count($product->colors[0]->images); $i++) {
+                if ($product->colors[0]->images[$i]->imageID == $mainImage->imageID) {
+                    $temp = $product->colors[0]->images[$i];
+                    $product->colors[0]->images[$i] = $product->colors[0]->images[0];
+                    $product->colors[0]->images[0] = $temp;
+                    break;
+                }
+            }
+        } else {
+            if (count($product->colors[0]->images) > 0) {
+                $product->colors[0]->images[0]->type = 'main';
+                $product->colors[0]->images[0]->update();
+                $mainImage = Image::with('color')->where('colorID', $colorID)->where('type', 'main')->first();
+            }
+        }
+        return view('adminPanel.single_product_view', ['product' => $product, 'colour' => $color, 'categories' => $categories, 'mainImage' => $mainImage, 'clothesSizes' => $this->clothesSizes, 'otherColors' => $otherColors]);
+//        } catch (DecryptException $e) {
+//            return back();
+//        }
     }
 
     // update product request
     public function updateProduct(Request $request)
     {
         $Color = Color::find($request->colorID);
-        if ($request->colorcode != $Color->colorcode){
+        if ($request->colorcode != $Color->colorcode) {
             $this->validate($request, [
-                'colorcode' => 'unique:colors,colorcode,NULL,colorID,productID,'.$request->productID
+                'colorcode' => 'unique:colors,colorcode,NULL,colorID,productID,' . $request->productID
             ]);
         }
         $sizes = $request->size;
         $quantities = $request->quantity;
-        $product = Product::find($request->productID);
+        $newSizes = $request->newSize;
+        $newQuantities = $request->newQuantity;
+        $product = Product::where('productID',$request->productID)->with(['colors'=>function($query) use($request){
+            $query->where('colorID',$request->colorID);
+        },'colors.sizes'])->first();
+        foreach ($product->colors[0]->sizes as $key => $size){
+            $size->size = $sizes[$key];
+            $size->pivot->availableUnits = $quantities[$key] ;
+            $size->pivot->update();
+            $size->update();
+        }
+        $product->colors[0]->colorcode = $request->colorcode;
+        $product->colors[0]->update();
         $category = Category::where('categoryName', $request->category)->first();
         $product->pass($request);
         $category->products()->save($product);
-        foreach ($product->colors as $color) {
-            if ($color->colorID == $request->colorID) {
-                foreach ($color->sizes as $size) {
-                    $size->pivot->delete();
-                    $size->delete();
-                }
-                $color->colorcode = $request->colorcode;
-                $color->update();
-                break;
-            }
-        }
         $files = $request->file('imageFile');
         if ($files) {
             foreach ($files as $file) {
@@ -312,7 +314,7 @@ class AdminController extends Controller
                     $imageNo = 1;
                 else
                     $imageNo = (Image::all()->last()->imageID) + 1;
-                $imageName =  $imageNo .'.'. $file->getClientOriginalExtension();
+                $imageName = $imageNo . '.' . $file->getClientOriginalExtension();
                 $file->move($this->productsImages, $imageName);
 
                 $this->imageCompressor->run($this->productsImages . '/' . $imageName, $file->getClientOriginalExtension(), 5);
@@ -321,7 +323,7 @@ class AdminController extends Controller
             }
             $Color->productStatus = 0;
             $Color->update();
-            $url = route('product', ['productID' => encrypt($product->productID), 'colorID' => encrypt($color->colorID)]);
+            $url = route('product', ['productName' => $product->productName, 'colorID' => $Color->colorID]);
             $admins = User::where('type', 'admin')->get(['id']);
             $message = auth()->user()->name . ' company added a new image to a product';
             foreach ($admins as $admin) {
@@ -333,14 +335,14 @@ class AdminController extends Controller
                 $myNotifications->url = $url;
                 $myNotifications->userID = $admin->id;
                 $myNotifications->seen = false;
-                $myNotifications->colorID = $color->colorID;
+                $myNotifications->colorID = $Color->colorID;
                 $myNotifications->save();
             }
         }
 
-        for ($i = 0; $i < count($sizes); $i++) {
-            Size::insert(['size' => $sizes[$i]]);
-            Colorsize::insert(['colorID' => $request->colorID, 'sizeID' => Size::all()->last()->sizeID, 'availableUnits' => $quantities[$i]]);
+        for ($i = 0; $i < count($newSizes); $i++) {
+            Size::insert(['size' => $newSizes[$i]]);
+            Colorsize::insert(['colorID' => $request->colorID, 'sizeID' => Size::all()->last()->sizeID, 'availableUnits' => $newQuantities[$i]]);
         }
 
         return back();
@@ -360,6 +362,7 @@ class AdminController extends Controller
             }
             foreach ($product->colors as $color) {
                 if ($color->colorID == $colorID) {
+                    Cartproduct::where('colorID', $colorID)->delete();
                     foreach ($color->sizes as $size) {
                         $size->pivot->delete();
                         $size->delete();
@@ -373,8 +376,7 @@ class AdminController extends Controller
                     }
                     $color->delete();
                     Notification::where('colorID', $colorID)->delete();
-                    Cartproduct::where('colorID',$colorID)->delete();
-                    Favourite::where('productID',$productID)->delete();
+                    Favourite::where('productID', $productID)->delete();
                     break;
                 }
             }
@@ -402,7 +404,7 @@ class AdminController extends Controller
         $category = Category::where('categoryName', $request->category)->first();
         $product = new Product();
         $product->pass($request);
-        $supplier = Supplier::where('supplierID', auth()->user()->id)->first();
+        $supplier = Supplier::where('supplierID', Auth::guard('web')->user()->id)->first();
         $category->products()->save($product);
         $supplier->products()->save($product);
         $color = new Color();
@@ -417,7 +419,7 @@ class AdminController extends Controller
                 $imageNo = 1;
             else
                 $imageNo = (Image::all()->last()->imageID) + 1;
-            $imageName = $imageNo .'.'. $file->getClientOriginalExtension();
+            $imageName = $imageNo . '.' . $file->getClientOriginalExtension();
             $file->move($this->productsImages, $imageName);
             $this->imageCompressor->run($this->productsImages . '/' . $imageName, $file->getClientOriginalExtension(), 5);
             //  $this->imageCompressor->run($this->productsImages . '/' . $imageName, $file->getClientOriginalExtension(), 10);
@@ -434,8 +436,8 @@ class AdminController extends Controller
             Size::insert(['size' => $sizes[$i]]);
             Colorsize::insert(['colorID' => $color->colorID, 'sizeID' => Size::all()->last()->sizeID, 'availableUnits' => $quantities[$i]]);
         }
-        $company = User::find(auth()->user()->id);
-        $url = route('product', ['productID' => encrypt($product->productID), 'colorID' => encrypt($color->colorID)]);
+        $company = User::find(Auth::guard('web')->user()->id);
+        $url = route('product', ['productName' => $product->productName, 'colorID' => $color->colorID]);
         $admins = User::where('type', 'admin')->get(['id']);
         $message = $company->name . ' company published a new product';
         foreach ($admins as $admin) {
@@ -450,14 +452,14 @@ class AdminController extends Controller
             $myNotifications->colorID = $color->colorID;
             $myNotifications->save();
         }
-        return redirect($url);
+        return redirect()->route('WaitingProducts');
     }
 
     // add product new color request
     public function addProductColor(Request $request)
     {
         $this->validate($request, [
-            'colorcode' => 'unique:colors,colorcode,NULL,colorID,productID,'.$request->productID
+            'colorcode' => 'unique:colors,colorcode,NULL,colorID,productID,' . $request->productID
         ]);
         $product = Product::find($request->productID);
         $sizes = $request->size;
@@ -476,7 +478,7 @@ class AdminController extends Controller
                 $imageNo = 1;
             else
                 $imageNo = (Image::all()->last()->imageID) + 1;
-            $imageName = $imageNo .'.'. $file->getClientOriginalExtension();
+            $imageName = $imageNo . '.' . $file->getClientOriginalExtension();
             $file->move($this->productsImages, $imageName);
             $this->imageCompressor->run($this->productsImages . '/' . $imageName, $file->getClientOriginalExtension(), 5);
             //  $this->imageCompressor->run($this->productsImages . '/' . $imageName, $file->getClientOriginalExtension(), 10);
@@ -498,8 +500,8 @@ class AdminController extends Controller
             Colorsize::insert(['colorID' => $color->colorID, 'sizeID' => Size::all()->last()->sizeID, 'availableUnits' => $quantities[$i]]);
         }
 
-        $company = User::find(auth()->user()->id);
-        $url = route('product', ['productID' => encrypt($product->productID), 'colorID' => encrypt($color->colorID)]);
+        $company = User::find(Auth::guard('web')->user()->id);
+        $url = route('product', ['productName' => $product->productName, 'colorID' => $color->colorID]);
         $admins = User::where('type', 'admin')->get(['id']);
         $message = $company->name . ' company added new color to a product';
         foreach ($admins as $admin) {
@@ -528,6 +530,7 @@ class AdminController extends Controller
             if (!$product)
                 return redirect($this->defaultRedirection);
             foreach ($product->colors as $color) {
+                Cartproduct::where('colorID', $color->colorID)->delete();
                 foreach ($color->sizes as $size) {
                     $size->pivot->delete();
                     $size->delete();
@@ -541,9 +544,8 @@ class AdminController extends Controller
                 }
                 $color->delete();
                 Notification::where('colorID', $color->colorID)->delete();
-                Cartproduct::where('colorID',$color->colorID)->delete();
             }
-            Favourite::where('productID',$productID)->delete();
+            Favourite::where('productID', $productID)->delete();
             $product->delete();
             return redirect($this->defaultRedirection);
         } catch (DecryptException $e) {
@@ -554,7 +556,7 @@ class AdminController extends Controller
     // profile view
     public function profile()
     {
-        $supplier = Supplier::find(auth()->user()->id);
+        $supplier = Supplier::find(Auth::guard('web')->user()->id);
         if (!$supplier)
             return redirect($this->defaultRedirection);
         return view('adminPanel.company_profile', ['supplier' => $supplier]);
@@ -592,7 +594,7 @@ class AdminController extends Controller
                 if ($image->imageID == $imageID) {
                     $temp = $image->image;
                     $image->delete();
-                    $file = $this->productsImages. $temp;
+                    $file = $this->productsImages . $temp;
                     if (file_exists($file))
                         unlink($file);
                     break;
@@ -612,7 +614,7 @@ class AdminController extends Controller
             $color = Color::find($colorID);
             $product = Product::find($color->productID);
             $supplier = Supplier::find($product->supplierID);
-            $url = route('product', ['productID' => encrypt($product->productID), 'colorID' => encrypt($color->colorID)]);
+            $url = route('product', ['productName' => $product->productName, 'colorID' => $color->colorID]);
             $message = 'Your Product ( ' . $product->productName . ' ) had been approved';
             $this->pusher->trigger((string)$supplier->supplierID, 'event', ['message' => $message, 'url' => $url]);
             $myNotifications = new Notification();
@@ -638,7 +640,7 @@ class AdminController extends Controller
             $color = Color::find($colorID);
             $product = Product::find($color->productID);
             $supplier = Supplier::find($product->supplierID);
-            $url = route('product', ['productID' => encrypt($product->productID), 'colorID' => encrypt($color->colorID)]);
+            $url = route('product', ['productName' => $product->productName, 'colorID' => $color->colorID]);
             $message = 'Your Product ( ' . $product->productName . ' ) had been rejected';
             $this->pusher->trigger((string)$supplier->supplierID, 'event', ['message' => $message, 'url' => $url]);
             $myNotifications = new Notification();
@@ -655,6 +657,7 @@ class AdminController extends Controller
             return redirect($this->defaultRedirection);
         }
     }
+
     // notifications view
     public function notifications()
     {
@@ -664,7 +667,7 @@ class AdminController extends Controller
     // update profile request
     public function updateProfile(Request $request)
     {
-        $supplier = Supplier::find(auth()->user()->id);
+        $supplier = Supplier::find(Auth::guard('web')->user()->id);
         $logo = $request->file('logo');
         $destinationPath = $this->logosImages;
         $imageName = $supplier->supplierName . $logo->getClientOriginalName();
@@ -683,6 +686,78 @@ class AdminController extends Controller
         $supplier->suppImage = $imageName;
         $supplier->update();
         return back();
+    }
+
+    // orders view
+    public function orders()
+    {
+        $orders = null;
+        if (auth()->user()->type == 'admin') {
+            $orders = Order::with(['customer'])->paginate(15);
+        }
+        else{
+            $ordersToPaginate = Order::with(['orderdetails'=>function($query){
+                $query->where('supplierID',auth()->user()->id);
+            }])->get();
+            $temp = [];
+            foreach ($ordersToPaginate as $order){
+                if (count($order->orderdetails) != 0){
+                    $temp[] = $order;
+                }
+            }
+            unset($ordersToPaginate);
+            $ordersToPaginate = $temp;
+            $orders = Order::with(['customer'])->where(function ($query) use ($ordersToPaginate){
+                foreach ($ordersToPaginate as $key => $order){
+                    if ($key == 0){
+                        $query->where('orderID',$order->orderID);
+                    }
+                    else{
+                        $query->orWhere('orderID',$order->orderID);
+                    }
+                }
+            })->paginate(15);
+        }
+        return view('adminPanel.orders',['orders'=>$orders]);
+    }
+
+    public function orderDetails($orderID){
+        $orderDetails = null;
+        if (auth()->user()->type == 'company') {
+            $orderDetails = Orderdetail::where('supplierID', auth()->user()->id)->where('orderID',$orderID)->with(['supplier','product','size','color'])->get();
+        }
+        else {
+            $orderDetails = Orderdetail::where('orderID',$orderID)->with(['supplier','product','size','color'])->get();
+        }
+        if(count($orderDetails) == 0){
+            return back();
+        }
+        $totalPrice = 0 ;
+        foreach ($orderDetails as $orderDetail){
+            $totalPrice += $orderDetail->quantity * $orderDetail->product->price;
+        }
+        return view('adminPanel.order_details',['orderDetails'=>$orderDetails,'totalPrice'=>$totalPrice]);
+    }
+
+    // get All Products with certain status
+    public function getAllProducts($status){
+        $allProducts = null;
+        if (auth()->user()->type == 'admin') {
+            $allProducts = Product::with(['supplier', 'colors' => function ($query)use ($status) {
+                $query->where('productStatus',$status);
+            }, 'category'])->get();
+        } else {
+            $allProducts = Product::with(['supplier', 'colors' => function ($query) use($status) {
+                $query->where('productStatus', $status);
+            }, 'category'])->where('supplierID', Auth::guard('web')->user()->id)->get();
+        }
+        $temp = [];
+        foreach ($allProducts as $product) {
+            if (count($product->colors) != 0) {
+                $temp[] = $product;
+            }
+        }
+        return $temp;
     }
 
 }

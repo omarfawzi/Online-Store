@@ -4,20 +4,34 @@ use App\Customer;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Socialite\Facades\Socialite;
 
 class WebLoginController extends Controller
 {
-    use AuthenticatesUsers;
     protected $redirectTo  ;
     public function __construct()
     {
-        $this->redirectTo = '/';
+        $this->redirectTo ;
+    }
+    public function login(Request $request)
+    {
+        $customer = Customer::where('email',$request->email)->first();
+        if ($customer && Hash::check($request->password,$customer->password)){
+            $this->guard()->login($customer);
+            return back()->withErrors(['showProfile'=>'true']);
+        }
+        if (!$customer)
+            return back()->withErrors(['email'=>"Mail doesn't exist"]);
+        if (!Hash::check($request->password,$customer->password)){
+            return back()->withErrors(['password'=>"Wrong Password"])->withInput(['email'=>$request->email]);
+        }
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
-        Auth::guard('customer')->logout();
+        $this->guard()->logout();
+        $request->session()->invalidate();
         return back();
     }
 
@@ -39,7 +53,7 @@ class WebLoginController extends Controller
         $customer['lastName'] = $explodeName[1];
         $authUser = $this->findOrCreateUser($customer, $provider);
         $this->guard()->login($authUser);
-        return redirect($this->redirectTo);
+        return redirect()->route('index')->withErrors(['showProfile'=>'true']);
     }
 
     public function findOrCreateUser($customer, $provider)
@@ -58,5 +72,7 @@ class WebLoginController extends Controller
             'provider_id' => $customer['id']
         ]);
     }
+
+
 
 }

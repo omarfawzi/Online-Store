@@ -17,7 +17,7 @@
                     <ul class="slides">
                         @foreach($product->colors[0]->images as $image)
                         <li data-thumb="{{asset('assets/admin/images/products/'.$image->image)}}">
-                            <div class="thumb-image"> <img src="{{asset('assets/admin/images/products/'.$image->image)}}" data-imagezoom="true" class="img-responsive"> </div>
+                            <div class="thumb-image"> <img src="{{asset('assets/admin/images/products/'.$image->image)}}" data-imagezoom="true" class="img-responsive loading"> </div>
                         </li>
                             @endforeach
                     </ul>
@@ -106,8 +106,20 @@
                 <div class="simpleCart_shelfItem">
                     <p>EGP &nbsp;{{$product->price}}</p>
                     <input name="price" value="{{$product->price}}" type="hidden">
+                    @if ($errors->has('msg'))
+                        <span class="help-block">
+                            <strong style="color: red">{{ $errors->first('msg') }}</strong>
+                        </span>
+                    @endif
                     <input type="button" style="width: 200px" class="btn btn-danger" id="addToCart" value="ADD TO CART">
                 </div>
+                <script>
+                    $(document).ready(function () {
+                       @if($errors->has('disable'))
+                            $('#addToCart').attr('disabled','disabled');
+                        @endif
+                    });
+                </script>
                 <script>
                     $('#addToCart').click(function () {
                         @if(!Auth::guard('customer')->check())

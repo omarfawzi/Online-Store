@@ -56,4 +56,9 @@ class Color extends Eloquent
 		return $this->hasMany(\App\Image::class, 'colorID');
 	}
 
+    public function orderdetails()
+    {
+        return $this->hasMany(\App\Orderdetail::class, 'colorID');
+    }
+
 }

@@ -27,13 +27,11 @@ class APIController extends Controller
     private $productImages;
     private $logoImages;
     private $currentHost;
-    private $categories = [];
     private $stop;
     private $paginationValue = 4;
 
     public function __construct()
     {
-        $this->setCategories();
         $this->options = array(
             'cluster' => 'eu',
             'encrypted' => true
@@ -50,13 +48,6 @@ class APIController extends Controller
         $this->logoImages = $this->currentHost . 'assets/admin/images/logos/';
     }
 
-    public function setCategories()
-    {
-        $this->categories['Men'] = ['Shirts', 'T-Shirts', 'Trousers', 'Coats', 'Jackets', 'Footwear'];
-        $this->categories['Women'] = ['Dresses', 'Skirts', 'Shirts', 'T-Shirts', 'Trousers', 'Coats', 'Jackets', 'Footwear'];
-        $this->categories['Girls'] = ['Shirts', 'T-Shirts', 'Trousers', 'Coats', 'Jackets', 'Footwear', 'Pyjamas'];
-        $this->categories['Boys'] = ['Dresses', 'Skirts', 'Shirts', 'T-Shirts', 'Trousers', 'Coats', 'Jackets', 'Footwear', 'Pyjamas'];
-    }
 
     public function login(Request $request)
     {
@@ -140,7 +131,9 @@ class APIController extends Controller
 
     public function supplierProducts(Request $request)
     {
-        $customerID = (Customer::where('email', $request->email)->orWhere('provider_id', (int)($request->provider_id))->first());
+        if (!$request->provider_id)
+            $request->provider_id = -1 ;
+        $customerID = Customer::where('email', $request->email)->orWhere('provider_id', (int)($request->provider_id))->first();
         if ($customerID)
             $customerID = $customerID->customerID;
         $supplierProducts = Supplier::where('supplierID', $request->supplierID)->with(['products' => function ($query) {
@@ -163,7 +156,9 @@ class APIController extends Controller
 
     public function categoryProducts(Request $request)
     {
-        $customerID = (Customer::where('email', $request->email)->orWhere('provider_id', (int)($request->provider_id))->first());
+        if (!$request->provider_id)
+            $request->provider_id = -1 ;
+        $customerID = Customer::where('email', $request->email)->orWhere('provider_id', (int)($request->provider_id))->first();
         if ($customerID)
             $customerID = $customerID->customerID;
         else $customerID = -1;
@@ -187,8 +182,11 @@ class APIController extends Controller
     public function product(Request $request)
     {
         $product = Product::where('productID', $request->productID)->with(['colors' => function ($query) {
+            $query->where('productStatus','1');
             $query->select('colorID', 'productID', 'colorcode');
-        }, 'colors.images', 'colors.sizes'])->first(['supplierID', 'categoryID', 'productName', 'brand', 'price', 'productID', 'description']);
+        }, 'colors.images', 'colors.sizes'=>function($query){
+            $query->where('availableUnits', '>', 0);
+        }])->first(['supplierID', 'categoryID', 'productName', 'brand', 'price', 'productID', 'description']);
         $category = Category::find($product->categoryID);
         $product['category'] = $category->categoryName;
         if ($product['description'] == null)
@@ -196,58 +194,98 @@ class APIController extends Controller
         unset($product->productID);
         unset($product->supplierID);
         unset($product->categoryID);
-        foreach ($product->colors as $color) {
+        foreach ($product->colors as $key => $color) {
             unset($color->productID);
-            $temp = [];
-            for ($i = 1; $i < count($color->images); $i++) {
-                if ($color->images[$i]->type == 'main') {
-                    $swap = $color->images[0];
-                    $color->images[0] = $color->images[$i];
-                    $color->images[$i] = $swap;
+            if (count($color->sizes) == 0){
+                unset($product->colors[$key]);
+            }
+            else {
+                $temp = [];
+                for ($i = 1; $i < count($color->images); $i++) {
+                    if ($color->images[$i]->type == 'main') {
+                        $swap = $color->images[0];
+                        $color->images[0] = $color->images[$i];
+                        $color->images[$i] = $swap;
+                    }
                 }
-            }
-            foreach ($color->images as $image) {
-                $image->image = $this->productImages . $image->image;
-                $temp[] = $image->image;
-            }
-            unset($color->images);
-            $color->images = $temp;
-            foreach ($color->sizes as $size) {
-                $size['quantity'] = $size->pivot->availableUnits;
-                unset($size->pivot);
-            }
 
+                foreach ($color->sizes as $size) {
+                    $size['quantity'] = $size->pivot->availableUnits;
+                    unset($size->pivot);
+                }
+                foreach ($color->images as $image) {
+                    $image->image = $this->productImages . $image->image;
+                    $temp[] = $image->image;
+                }
+                unset($color->images);
+                $color->images = $temp;
+            }
+        }
+        if (count($product->colors) == 0){
+            unset($product);
         }
         return response()->json(['product' => $product], 200);
     }
 
     public function addFavourites(Request $request)
     {
-        $customerID = (Customer::where('email', $request->email)->orWhere('provider_id', (int)($request->provider_id))->first());
+        if (!$request->provider_id)
+            $request->provider_id = -1 ;
+        $customerID = Customer::where('email', $request->email)->orWhere('provider_id', (int)($request->provider_id))->first();
+        $productIDs = json_decode($request->productsIDs);
         if ($customerID)
             $customerID = $customerID->customerID;
         else
             return response()->json(['status' => 'failure'], 401);
-        $checkLiked = Favourite::where('customerID', $customerID)->where('productID', $request->productID)->first();
-        if ($checkLiked)
-            $checkLiked->delete();
-        else {
-            $favourite = new Favourite();
-            $favourite->customerID = $customerID;
-            $favourite->productID = $request->productID;
-            $favourite->save();
+        foreach ($productIDs as $id){
+            $checkLiked = Favourite::where('customerID', $customerID)->where('productID', $id)->first();
+            if ($checkLiked)
+                $checkLiked->delete();
+            else {
+                $favourite = new Favourite();
+                $favourite->customerID = $customerID;
+                $favourite->productID = $id;
+                $favourite->save();
+            }
         }
+
         return response()->json(['status' => 'success'], 200);
     }
 
-    public function categories()
+    public function categories(Request $request)
     {
-        return response()->json(['categories' => $this->categories], 200);
+        $genders = ['Men','Women','Boys','Girls'];
+        $map = [];
+        $categories = Category::with(['products'])->get();
+        $ret = [];
+        foreach ($categories as $category){
+            for ($i = 0 ; $i < count($genders) ; $i++){
+                $map[$genders[$i]] = 0 ;
+            }
+            if (count($category->products) != 0){
+                foreach ($category->products as $product){
+                    if($map[$product->gender] == 0){
+                        $ret[$product->gender][] = $category->categoryName;
+                    }
+                    $map[$product->gender] = 1;
+                }
+            }
+        }
+        if (!$request->provider_id)
+            $request->provider_id = -1 ;
+        $customer = Customer::where('email', $request->email)->orWhere('provider_id', (int)($request->provider_id))->first();
+        if ($customer){
+            $ret['firstName'] = $customer->firstName;
+            $ret['lastName'] = $customer->lastName;
+        }
+        return response()->json(['categories' => $ret], 200);
     }
 
     public function showFavourites(Request $request)
     {
-        $customerID = (Customer::where('email', $request->email)->orWhere('provider_id', (int)($request->provider_id))->first());
+        if (!$request->provider_id)
+            $request->provider_id = -1 ;
+        $customerID = Customer::where('email', $request->email)->orWhere('provider_id', (int)($request->provider_id))->first();
         if ($customerID)
             $customerID = $customerID->customerID;
         else
@@ -271,7 +309,9 @@ class APIController extends Controller
 
     public function addToCart(Request $request)
     {
-        $customer = (Customer::where('email', $request->email)->orWhere('provider_id', (int)($request->provider_id))->first());
+        if (!$request->provider_id)
+            $request->provider_id = -1 ;
+        $customer = Customer::where('email', $request->email)->orWhere('provider_id', (int)($request->provider_id))->first();
         if (!$customer)
             return response()->json(['status' => 'failure'], 401);
         $productExists = Cartproduct::where('productID', $request->productID)->where('sizeID', $request->sizeID)->where('colorID', $request->colorID)->where('customerID', $customer->customerID)->first();
@@ -290,7 +330,9 @@ class APIController extends Controller
 
     public function cartProductQuantity(Request $request)
     {
-        $customer = (Customer::where('email', $request->email)->orWhere('provider_id', (int)($request->provider_id))->first());
+        if (!$request->provider_id)
+            $request->provider_id = -1 ;
+        $customer = Customer::where('email', $request->email)->orWhere('provider_id', (int)($request->provider_id))->first();
         if (!$customer)
             return response()->json(['status' => 'failure'], 401);
         $cartProduct = Cartproduct::find($request->cartProductID);
@@ -308,7 +350,9 @@ class APIController extends Controller
 
     public function cartProducts(Request $request)
     {
-        $customer = (Customer::where('email', $request->email)->orWhere('provider_id', (int)($request->provider_id))->first());
+        if (!$request->provider_id)
+            $request->provider_id = -1 ;
+        $customer = Customer::where('email', $request->email)->orWhere('provider_id', (int)($request->provider_id))->first();
         $customerID = -1;
         if ($customer)
             $customerID = $customer->customerID;
@@ -343,8 +387,23 @@ class APIController extends Controller
         return response()->json(['status' => 'success'], 200);
     }
 
+    public function showProfile(Request $request){
+        if (!$request->provider_id)
+            $request->provider_id = -1 ;
+        $customer = Customer::where('email', $request->email)->orWhere('provider_id', $request->provider_id)->first();
+        unset($customer->customerID);
+        unset($customer->provider);
+        unset($customer->provider_id);
+        unset($customer->created_at);
+        unset($customer->updated_at);
+        return \response()->json(['profile'=>$customer]);
+    }
+
+
     public function updateProfile(Request $request)
     {
+        if (!$request->provider_id)
+            $request->provider_id = -1 ;
         $customer = Customer::where('email', $request->email)->orWhere('provider_id', $request->provider_id)->first();
         if ($request->firstName)
             $customer->firstName = $request->firstName;
@@ -358,6 +417,39 @@ class APIController extends Controller
             $customer->phoneNumber = $request->phoneNumber;
         $customer->update();
         return response()->json(['status' => 'success']);
+    }
+
+    public function filterComponents(){
+        $genders = ['Men', 'Women', 'Boys', 'Girls'];
+        $map = [];
+        for ($i = 0; $i < count($genders); $i++) {
+            $map[$genders[$i]] = 0;
+        }
+        $genders = [];
+        $brands = $this->getUniqueBrands();
+        $colors = $this->getUniqueColors();
+        $sizes = $this->getUniqueSizes();
+        $categories = Category::with(['products'])->get();
+        $categoriesNames = [];
+        foreach ($categories as $key => $category) {
+            if (count($category->products) == 0) {
+                unset($categories[$key]);
+            } else {
+                $categoriesNames[] = $category->categoryName;
+                foreach ($category->products as $product) {
+                    if ($map[$product->gender] == 0) {
+                        $genders[] = $product->gender;
+                    }
+                    $map[$product->gender] = 1;
+                }
+            }
+            unset($category->products);
+        }
+        return response()->json(['brands' => $brands,'colors'=>$colors,'sizes'=>$sizes,'categories'=>$categoriesNames,'genders'=>$genders],200);
+    }
+
+    public function filterBy(Request $request){
+
     }
 
     public function getPaginatedProducts($products, $index)
@@ -384,7 +476,8 @@ class APIController extends Controller
         foreach ($paginatedItems['products'] as $product) {
             unset($product->supplierID);
             unset($product->categoryID);
-            $product['image'] = $this->productImages . $product->colors[0]->images[0]->image;
+            $first = key(reset($product->colors));
+            $product['image'] = $this->productImages . $product->colors[$first]->images[0]->image;
             $liked = false;
             foreach ($product->favourites as $favourite) {
                 if ($favourite->productID == $product->productID) {
@@ -398,4 +491,74 @@ class APIController extends Controller
         }
         return $paginatedItems['products'];
     }
+
+    public function getUniqueSizes()
+    {
+        $map = [];
+        $uniqueSizes = [];
+        $colors = Color::with(['sizes'=>function($query){
+            $query->where('availableUnits','>',0);
+        }])->where('productStatus',1)->get();
+        foreach ($colors as $key => $color){
+            if (count($color->sizes) == 0){
+                unset($colors[$key]);
+            }else{
+                foreach ($color->sizes as $size){
+                    $map[(string)$size->size] = 0;
+                }
+            }
+        }
+        foreach ($colors as $color){
+            foreach ($color->sizes as $size) {
+                if ($map[(string)$size->size] == 0) {
+                    $uniqueSizes[] = $size->size;
+                }
+                $map[(string)$size->size]++;
+            }
+        }
+        usort($uniqueSizes, function ($a, $b) {
+            return $a <=> $b;
+        });
+        return $uniqueSizes;
+    }
+
+    public function getUniqueColors()
+    {
+        $map = [];
+        $uniqueColors = [];
+        $colors = Color::with(['sizes'=>function($query){
+            $query->where('availableUnits','>',0);
+        }])->where('productStatus',1)->get();
+        foreach ($colors as $key => $color){
+            if (count($color->sizes) == 0){
+                unset($colors[$key]);
+            }else{
+                $map[(string)$color->colorcode] = 0;
+            }
+        }
+        foreach ($colors as $color) {
+            if ($map[(string)$color->colorcode] == 0) {
+                $uniqueColors[] = $color->colorcode;
+            }
+            $map[(string)$color->colorcode]++;
+        }
+        return $uniqueColors;
+    }
+
+    public function getUniqueBrands(){
+        $map = [];
+        $uniqueBrands = [];
+        $brands = Product::select('brand')->get();
+        foreach ($brands as $brand) {
+            $map[(string)$brand->brand] = 0 ;
+        }
+        foreach ($brands as $brand) {
+            if ($map[(string)$brand->brand] == 0) {
+                $uniqueBrands[] = $brand->brand;
+            }
+            $map[(string)$brand->brand]++;
+        }
+        return $uniqueBrands;
+    }
+
 }

@@ -37,6 +37,10 @@ class Size extends Eloquent
     {
         return $this->hasMany(\App\Cartproduct::class, 'sizeID');
     }
+    public function orderdetails()
+    {
+        return $this->hasMany(\App\Orderdetail::class, 'sizeID');
+    }
 
 
 }

@@ -48,4 +48,8 @@ class Supplier extends Eloquent
         $this->supplierName = $supplier->name;
         $this->Email = $supplier->email;
     }
+    public function orderdetails()
+    {
+        return $this->hasMany(\App\Orderdetail::class, 'supplierID');
+    }
 }

@@ -60,4 +60,5 @@ return array(
     'Carbon\\' => array($vendorDir . '/nesbot/carbon/src/Carbon'),
     'Approached\\LaravelImageOptimizer\\' => array($vendorDir . '/approached/laravel-image-optimizer/src'),
     'App\\' => array($baseDir . '/app'),
+    '' => array($vendorDir . '/league/color-extractor/src'),
 );

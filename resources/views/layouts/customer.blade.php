@@ -7,18 +7,18 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <link rel="apple-touch-icon" sizes="76x76" href="{{asset('assets/admin/img/apple-icon.png')}}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-      <link rel="icon" type="image/png" sizes="96x96" href="{{asset('assets/admin/img/favicon.png')}}">
+    <link rel="icon" type="image/png" sizes="96x96" href="{{asset('assets/admin/img/favicon.png')}}">
 
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
 
     <meta name="keywords" content="Fashion"/>
-    {{--<script type="application/x-javascript"> addEventListener("load", function () {--}}
-            {{--setTimeout(hideURLbar, 0);--}}
-        {{--}, false);--}}
-        {{--function hideURLbar() {--}}
-            {{--window.scrollTo(0, 1);--}}
-        {{--} </script>--}}
-    <!-- //for-mobile-apps -->
+<script type="application/x-javascript"> addEventListener("load", function () {
+setTimeout(hideURLbar, 0);
+}, false);
+function hideURLbar() {
+window.scrollTo(0, 1);
+} </script>
+<!-- //for-mobile-apps -->
     <link href="{{asset('assets/website/css/bootstrap.css')}}" rel="stylesheet" type="text/css" media="all"/>
     <link href="{{asset('assets/website/css/style.css')}}" rel="stylesheet" type="text/css" media="all"/>
     <link href="{{asset('assets/website/css/fasthover.css')}}" rel="stylesheet" type="text/css" media="all"/>
@@ -34,8 +34,8 @@
     <link rel="stylesheet" href="{{asset('assets/website/css/jquery.countdown.css')}}"/>
     <!-- //countdown -->
     <!-- cart -->
-    <script src="{{asset('assets/website/js/simpleCart.min.js')}}"></script>
-    <!-- cart -->
+{{--<script src="{{asset('assets/website/js/simpleCart.min.js')}}"></script>--}}
+<!-- cart -->
     <!-- for bootstrap working -->
     <script type="text/javascript" src="{{asset('assets/website/js/bootstrap-3.1.1.min.js')}}"></script>
     <!-- //for bootstrap working -->
@@ -53,11 +53,12 @@
         });
     </script>
     <style>
-        .amount-box{
+        .amount-box {
             width: 100%;
             max-width: 400px;
         }
-        .amount-box input[type=text], .amount-box input[type=tel]{
+
+        .amount-box input[type=text], .amount-box input[type=tel] {
             display: block;
             border: 1px solid #ccc;
             padding: 8px 10px;
@@ -67,6 +68,7 @@
             -webkit-appearance: none;
             border-radius: 0;
         }
+
         .colorSquare {
 
             width: 15px;
@@ -80,8 +82,6 @@
             box-shadow: 0 0 5px #888888;
 
         }
-
-
 
         #productColor {
 
@@ -98,11 +98,23 @@
             padding: 1px 2px;
 
         }
+
+        .loading {
+            background: transparent url('http://thinkfuture.com/wp-content/uploads/2013/10/loading_spinner.gif') center no-repeat;
+        }
     </style>
     <!-- //end-smooth-scrolling -->
 </head>
-
-<body>
+<script>
+@if(Route::getCurrentRoute()->getName() != 'index')
+$(document).ready(function () {
+var myDiv = $("#scrollDiv");
+var scrollto = myDiv.offset().top + (myDiv.height() / 3);
+myDiv.animate({ scrollTop:  scrollto});
+});
+@endif
+</script>
+<body id="scrollDiv">
 <!-- header -->
 <div class="modal fade" id="myModal88" tabindex="-1" role="dialog" aria-labelledby="myModal88"
      aria-hidden="true">
@@ -119,81 +131,99 @@
                 <div class="row">
                     <div class="col-md-8 modal_body_left modal_body_left1"
                          style="border-right: 1px dotted #C2C2C2;padding-right:3em;">
-                        <div class="sap_tabs">
-                            <div id="horizontalTab" style="display: block; width: 100%; margin: 0px;">
-                                <ul>
-                                    <li class="resp-tab-item" aria-controls="tab_item-{{($errors->first('status') == 'register')?'1':'0'}}"><span>{{($errors->first('status') == 'register')?'Sign Up':'Sign In'}}</span></li>
-                                    <li class="resp-tab-item" aria-controls="tab_item-{{($errors->first('status') == 'register')?'0':'1'}}"><span>{{($errors->first('status') == 'register')?'Sign In':'Sign Up'}}</span></li>
-                                </ul>
-                                <div id="signInDiv" class="tab-1 resp-tab-content" aria-labelledby="tab_item-0">
-                                    <div class="facts">
-                                        <div class="register">
-                                            <form action="{{route('customer_login')}}" method="post">
-                                                {{ csrf_field() }}
+                        @if(!Auth::guard('customer')->check())
+                            <div class="sap_tabs">
+                                <div id="horizontalTab" style="display: block; width: 100%; margin: 0px;">
+                                    <ul>
+                                        <li class="resp-tab-item"
+                                            aria-controls="tab_item-{{($errors->first('status') == 'register')?'1':'0'}}">
+                                            <span>{{($errors->first('status') == 'register')?'Sign Up':'Sign In'}}</span>
+                                        </li>
+                                        <li class="resp-tab-item"
+                                            aria-controls="tab_item-{{($errors->first('status') == 'register')?'0':'1'}}">
+                                            <span>{{($errors->first('status') == 'register')?'Sign In':'Sign Up'}}</span>
+                                        </li>
+                                    </ul>
+                                    <div id="signInDiv" class="tab-1 resp-tab-content" aria-labelledby="tab_item-0">
+                                        <div class="facts">
+                                            <div class="register">
+                                                <form action="{{route('customer_login')}}" method="post">
+                                                    {{ csrf_field() }}
 
-                                                <div class="form-group{{ $errors->has('email') ? ' has-error' : '' }}">
-                                                        <input id="email" type="email" placeholder="Email" name="email" value="{{ old('email') }}" required>
+                                                    <div class="form-group{{ $errors->has('email') ? ' has-error' : '' }}">
+                                                        <input id="email" type="email" placeholder="Email" name="email"
+                                                               value="{{ old('email') }}" required>
                                                         @if ($errors->has('email') && $errors->first('status') != 'register')
                                                             <span class="help-block">
-                                                                <strong>{{ $errors->first('email') }}</strong></span>
+                                                                <strong>{{$errors->first('email')}}</strong></span>
+                                                            </span>
                                                         @endif
-                                                </div>
+                                                    </div>
 
-                                                <div class="form-group{{ $errors->has('password') ? ' has-error' : '' }}">
+                                                    <div class="form-group{{ $errors->has('password') ? ' has-error' : '' }}">
 
-                                                        <input id="password" type="password" placeholder="Password" name="password" required>
+                                                        <input id="password" type="password" placeholder="Password"
+                                                               name="password" required>
                                                         @if ($errors->has('password') && $errors->first('status') != 'register')
                                                             <span class="help-block">
                                                                 <strong>{{ $errors->first('password') }}</strong>
                                                             </span>
                                                         @endif
-                                                </div>
-                                                <div class="form-group">
-                                                    <br>
-                                                    <input type="checkbox" name="remember" {{ old('remember') ? 'checked' : ''}}> Remember Me
-                                                </div>
-                                                <div class="sign-up">
-                                                    <br>
-                                                    <input type="submit" value="Sign In"/>
-                                                </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <br>
+                                                        <input type="checkbox"
+                                                               name="remember" {{ old('remember') ? 'checked' : ''}}>
+                                                        Remember Me
+                                                    </div>
+                                                    <div class="sign-up">
+                                                        <br>
+                                                        <input type="submit" value="Sign In"/>
+                                                    </div>
 
-                                            </form>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div id="signUpDiv" class="tab-2 resp-tab-content" aria-labelledby="tab_item-1">
-                                    <div class="facts">
-                                        <div class="register">
-                                            <form action="{{route('customer_register')}}" method="post">
-                                                {{ csrf_field() }}
-                                                <div class="form-group{{ $errors->has('email') ? ' has-error' : '' }}">
-                                                        <input id="email" type="email" placeholder="Email" name="email" value="{{ old('email') }}" required>
+                                    <div id="signUpDiv" class="tab-2 resp-tab-content" aria-labelledby="tab_item-1">
+                                        <div class="facts">
+                                            <div class="register">
+                                                <form action="{{route('customer_register')}}" method="post">
+                                                    {{ csrf_field() }}
+                                                    <div class="form-group{{ $errors->has('email') ? ' has-error' : '' }}">
+                                                        <input id="email" type="email" placeholder="Email" name="email"
+                                                               value="{{ old('email') }}" required>
                                                         @if ($errors->has('email') && $errors->first('status') == 'register')
                                                             <span class="help-block">
-                                                                <strong>{{ $errors->first('email') }}</strong></span>
+                                                                <strong style="color:red;">{{$errors->first('email')}}</strong></span>
                                                         @endif
-                                                </div>
+                                                    </div>
 
-                                                <div class="form-group{{ $errors->has('password') ? ' has-error' : '' }}">
+                                                    <div class="form-group{{ $errors->has('password') ? ' has-error' : '' }}">
 
-                                                        <input id="password" type="password" placeholder="Password" name="password" required>
+                                                        <input id="password" type="password" placeholder="Password"
+                                                               name="password" required>
                                                         @if ($errors->has('password') && $errors->first('status') == 'register')
                                                             <span class="help-block">
                                                                 <strong>{{ $errors->first('password') }}</strong>
                                                             </span>
                                                         @endif
-                                                </div>
+                                                    </div>
 
-                                                <div class="form-group">
-                                                        <input id="password-confirm" type="password" placeholder="Confirm Password" name="password_confirmation" required>
-                                                </div>
-                                                <div class="form-group{{ $errors->has('gender') ? ' has-error' : '' }}">
+                                                    <div class="form-group">
+                                                        <input id="password-confirm" type="password"
+                                                               placeholder="Confirm Password"
+                                                               name="password_confirmation" required>
+                                                    </div>
+                                                    <div class="form-group{{ $errors->has('gender') ? ' has-error' : '' }}">
 
-                                                        <div class="form-control" style="box-shadow: none; border: none; background-color: transparent;">
+                                                        <div class="form-control"
+                                                             style="box-shadow: none; border: none; background-color: transparent;">
                                                             <br>
                                                             <input type="radio" id="gender" name="gender" value="male">
                                                             Male &nbsp; &nbsp;
-                                                            <input type="radio" id="gender" name="gender" value="female">
+                                                            <input type="radio" id="gender" name="gender"
+                                                                   value="female">
                                                             Female
                                                             @if ($errors->has('gender') && $errors->first('status') == 'register')
                                                                 <span class="help-block">
@@ -201,17 +231,18 @@
                                                                 </span>
                                                             @endif
                                                         </div>
-                                                </div>
-                                                <div class="sign-up">
-                                                    <br>
-                                                    <input type="submit" value="Sign up"/>
-                                                </div>
-                                            </form>
+                                                    </div>
+                                                    <div class="sign-up">
+                                                        <br>
+                                                        <input type="submit" value="Sign up"/>
+                                                    </div>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        @endif
                         <script src="{{asset('assets/website/js/easyResponsiveTabs.js')}}"
                                 type="text/javascript"></script>
                         <script type="text/javascript">
@@ -235,7 +266,9 @@
                             </div>
                             <div class="col-md-10">
                                 <ul class="social">
-                                    <li class="social_facebook"><a  href="{{route('socialAuth',['provider'=>'facebook'])}}" class="entypo-facebook"></a></li>
+                                    <li class="social_facebook"><a
+                                                href="{{route('socialAuth',['provider'=>'facebook'])}}"
+                                                class="entypo-facebook"></a></li>
                                     {{--<li class="social_dribbble"><a  href="{{route('socialAuth',['provider'=>'google'])}}" class="entypo-dribbble"></a></li>--}}
                                     {{--<li class="social_twitter"><a  href="{{route('socialAuth',['provider'=>'twitter'])}}" class="entypo-twitter"></a></li>--}}
                                     {{--<li class="social_behance"><a href="#" class="entypo-behance"></a></li>--}}
@@ -249,9 +282,9 @@
     </div>
 </div>
 <script>
-    @if(count($errors->all()) > 0)
+    @if($errors->has('gender') || $errors->has('email') || $errors->has('password') || $errors->has('login'))
     $('#myModal88').modal('show');
-    @if ($errors->first('status') == 'register')
+            @if ($errors->first('status') == 'register')
     var div1 = $('#signUpDiv');
     var div2 = $('#signInDiv');
     var tdiv1 = div1.clone();
@@ -264,59 +297,64 @@
 </script>
 <div class="header" id="home">
     <div class="container">
-        @if(!Auth::guard('customer')->check())
         <div class="w3l_login">
-            <a href="#" data-toggle="modal" data-target="#myModal88"><span class="glyphicon glyphicon-user"
-                                                                           aria-hidden="true"></span></a>
-        </div>
-        @endif
-            @if(Auth::guard('customer')->check())
-            <div class="w3l_login">
-                <a href="{{ route('customer_logout') }}"
+            @if(!Auth::guard('customer')->check())
 
-                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    Sign Out
-                </a>
-                <form id="logout-form" action="{{ route('customer_logout') }}" method="POST"
-
-                      style="display: none;">
-
-                    {{ csrf_field() }}
-
-                </form>
-            </div>
+                <a href="#" data-toggle="modal" data-target="#myModal88"><span class="glyphicon glyphicon-user"
+                                                                               aria-hidden="true"></span></a>
+            @else
+                <a href="#" data-toggle="modal" data-target="#myProfileModal"><span class="glyphicon glyphicon-user"
+                                                                                    aria-hidden="true"></span></a>
             @endif
 
-            <div class="w3l_logo">
+        </div>
+        {{--@if(Auth::guard('customer')->check())--}}
+        {{--<div class="w3l_login">--}}
+        {{----}}
+        {{--</div>--}}
+        {{--@endif--}}
+
+        <div class="w3l_logo">
             <h1><a href="{{route('index')}}">Fashion<span>For Fashion Lovers</span></a></h1>
-            </div>
+        </div>
         {{--<div class="search">--}}
-            {{--<input class="search_box" type="checkbox" id="search_box">--}}
-            {{--<label class="icon-search" for="search_box"><span class="glyphicon glyphicon-search"--}}
-                                                              {{--aria-hidden="true"></span></label>--}}
-            {{--<div class="search_form">--}}
-                {{--<form action="#" method="post">--}}
-                    {{--<input type="text" name="Search" placeholder="Search...">--}}
-                    {{--<input type="submit" value="Send">--}}
-                {{--</form>--}}
-            {{--</div>--}}
+        {{--<input class="search_box" type="checkbox" id="search_box">--}}
+        {{--<label class="icon-search" for="search_box"><span class="glyphicon glyphicon-search"--}}
+        {{--aria-hidden="true"></span></label>--}}
+        {{--<div class="search_form">--}}
+        {{--<form action="#" method="post">--}}
+        {{--<input type="text" name="Search" placeholder="Search...">--}}
+        {{--<input type="submit" value="Send">--}}
+        {{--</form>--}}
+        {{--</div>--}}
+        {{--</div>--}}
+        {{--<div class="collapse navbar-collapse">--}}
+        {{--<ul class="nav navbar-nav navbar-right">--}}
+        {{--<li class="dropdown">--}}
+        {{--<a href="#" class="dropdown-toggle"  data-toggle="dropdown">Profile<b class="caret"></b></a>--}}
+        {{--<ul class="dropdown-menu">--}}
+        {{--<li>MyProfile</li>--}}
+        {{--</ul>--}}
+        {{--</li>--}}
+        {{--</ul>--}}
         {{--</div>--}}
         <div class="cart box_1">
             <a id="myCart" href="javascript:;">
                 <div class="total">
                     EGP
                     @if(Auth::guard('customer')->check())
-                    <span id="cartTotalMoney">{{$cartTotalPrice}}</span> (<span id="cartTotalItems">{{$cartItemsCount}}</span> items)
+                        <span id="cartTotalMoney">{{$cartTotalPrice}}</span> (<span
+                                id="cartTotalItems">{{$cartItemsCount}}</span> items)
                     @else
                         <span id="cartTotalMoney">0.00</span> (<span id="cartTotalItems">0</span> items)
                     @endif
                 </div>
                 <img src="{{asset('assets/website/images/bag.png')}}" alt=""/>
             </a>
-            <p><a href="javascript:;" id="emptyCart" class="simpleCart_empty" >Empty Cart</a></p>
+            <p><a href="javascript:;" id="emptyCart" class="simpleCart_empty">Empty Cart</a></p>
             <div class="clearfix"></div>
         </div>
-            <div class="clearfix"></div>
+        <div class="clearfix"></div>
         <script>
             $('#emptyCart').click(function () {
                 var itemsCount = parseInt($('#cartTotalItems').text());
@@ -328,12 +366,12 @@
                         $('#totalPrice').text(0);
                         $('#cartTotalMoney').text('0.00');
                         $('#cartTotalItems').text(0);
-                        for (var i = 1 ; i <= itemsCount ; i++ ) {
+                        for (var i = 1; i <= itemsCount; i++) {
                             $('.rem' + i).remove();
                             $('#list' + (i - 1)).remove();
                         }
-
                         $('#shoppingItemsNumber').text(0);
+                        $('#orderButton').hide();
                     }
                 });
             });
@@ -341,14 +379,14 @@
     </div>
 </div>
 <script>
-        $('#myCart').click(function () {
-            var url = '{{route('myCart')}}';
-            @if(Auth::guard('customer')->check())
-                window.location.replace(url);
-            @else
-            $('#myModal88').modal('show');
-            @endif
-        });
+    $('#myCart').click(function () {
+        var url = '{{route('myCart')}}';
+        @if(Auth::guard('customer')->check())
+window.location.replace(url);
+        @else
+$('#myModal88').modal('show');
+        @endif
+    });
 </script>
 <div class="navigation">
     <div class="container">
@@ -366,52 +404,60 @@
 
             <div class="collapse navbar-collapse" id="bs-megadropdown-tabs">
                 <ul class="nav navbar-nav">
-                    <li class="active"><a href="{{route('index')}}" class="{{(Route::getCurrentRoute()->getName() == 'index')?'act':''}}">Home</a></li>
+                    <li class="active"><a href="{{route('index')}}"
+                                          class="{{(Route::getCurrentRoute()->getName() == 'index')?'act':''}}">Home</a>
+                    </li>
                     <!-- Mega Menu -->
                     @foreach($categoriesWeb as $key => $category)
                         <li class="dropdown">
-                            <a href="#" class="dropdown-toggle"  data-toggle="dropdown">{{$key}}<b class="caret"></b></a>
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{$key}}<b class="caret"></b></a>
                             <ul class="dropdown-menu multi-column columns-3">
                                 <div class="row">
                                     <div class="col-sm-3">
                                         <ul class="multi-column-dropdown">
                                             <h6>Categories</h6>
                                             @foreach($category as $value)
-                                            <li><a href="{{route('categoryProducts',['gender'=>$key,'categoryName'=>$value])}}">{{$value}}</a></li>
+                                                <li>
+                                                    <a href="{{route('categoryProducts',['gender'=>$key,'categoryName'=>$value])}}">{{$value}}</a>
+                                                </li>
                                             @endforeach
                                         </ul>
                                     </div>
 
                                     <div class="col-sm-9">
                                         <ul class="multi-column-dropdown">
-                                        @if($key == 'Men')
-                                            <li>
-                                                <img src="http://www.menstylefashion.com/wp-content/uploads/2016/02/Italian-Men-Fashion-Sense-Sunglasses-and-cup-of-Coffee.jpg" class="img-responsive">
-                                            </li>
-                                        @endif
-                                        @if($key == 'Women')
-                                            <li>
-                                            <img src="http://www.michellebelau.ae/img/collection/wrinkeled-coat-ivory-michelle-belau.jpg" class="img-responsive">
-                                            </li>
+                                            @if($key == 'Men')
+                                                <li>
+                                                    <img src="http://www.menstylefashion.com/wp-content/uploads/2016/02/Italian-Men-Fashion-Sense-Sunglasses-and-cup-of-Coffee.jpg"
+                                                         class="img-responsive">
+                                                </li>
                                             @endif
-                                        @if($key == 'Girls')
-                                            <li>
-                                            <img src="https://s-media-cache-ak0.pinimg.com/736x/24/ca/b6/24cab6e05caa6c08afb4f524ca8584ad--outfits-for-school-for-kids-girls-tennis-outfits.jpg" class="img-responsive">
-                                            </li>
-                                                @endif
-                                        @if($key == 'Boys')
-                                            <li>
-                                            <img src="https://s-media-cache-ak0.pinimg.com/736x/ea/16/cc/ea16cce8aa9334eabe1f1b666db70a74--little-boy-style-boys-style.jpg" class="img-responsive">
-                                            </li>
+                                            @if($key == 'Women')
+                                                <li>
+                                                    <img src="http://www.michellebelau.ae/img/collection/wrinkeled-coat-ivory-michelle-belau.jpg"
+                                                         class="img-responsive">
+                                                </li>
+                                            @endif
+                                            @if($key == 'Girls')
+                                                <li>
+                                                    <img src="https://s-media-cache-ak0.pinimg.com/736x/24/ca/b6/24cab6e05caa6c08afb4f524ca8584ad--outfits-for-school-for-kids-girls-tennis-outfits.jpg"
+                                                         class="img-responsive">
+                                                </li>
+                                            @endif
+                                            @if($key == 'Boys')
+                                                <li>
+                                                    <img src="https://s-media-cache-ak0.pinimg.com/736x/ea/16/cc/ea16cce8aa9334eabe1f1b666db70a74--little-boy-style-boys-style.jpg"
+                                                         class="img-responsive">
+                                                </li>
                                             @endif
                                         </ul>
                                     </div>
 
                                     {{--<div class="col-sm-4">--}}
-                                        {{--<div class="w3ls_products_pos">--}}
-                                            {{--<h4>50%<i>Off/-</i></h4>--}}
-                                            {{--<img src="images/1.jpg" alt=" " class="img-responsive"/>--}}
-                                        {{--</div>--}}
+                                    {{--<div class="w3ls_products_pos">--}}
+                                    {{--<h4>50%<i>Off/-</i></h4>--}}
+                                    {{--<img src="images/1.jpg" alt=" " class="img-responsive"/>--}}
+                                    {{--</div>--}}
                                     {{--</div>--}}
                                     <div class="clearfix"></div>
                                 </div>
@@ -438,12 +484,13 @@
             <p>We will reach you as soon as possible</p>
         </div>
         <div class="col-md-6 w3agile_newsletter_right">
-            <form action="#" method="post">
-                <input type="email" name="Email" value="Email" onfocus="this.value = '';" onblur="if (this.value == '') {this.value = 'Email';}" required="">
+            <form action="javascript:;" method="post">
+                <input type="email" name="Email" value="Email" onfocus="this.value = '';"
+                       onblur="if (this.value == '') {this.value = 'Email';}" required="">
                 <input type="submit" value="">
             </form>
         </div>
-        <div class="clearfix"> </div>
+        <div class="clearfix"></div>
     </div>
 </div>
 <div class="footer">
@@ -471,21 +518,37 @@
                 </ul>
             </div>
             {{--<div class="col-md-3 w3_footer_grid">--}}
-                {{--<h3>Category</h>--}}
-                {{--<ul class="info">--}}
-                    {{--<li><a href="dresses.html">Dresses</a></li>--}}
-                    {{--<li><a href="sweaters.html">Sweaters</a></li>--}}
-                    {{--<li><a href="shirts.html">Shirts</a></li>--}}
-                    {{--<li><a href="sarees.html">Sarees</a></li>--}}
-                    {{--<li><a href="skirts.html">Shorts & Skirts</a></li>--}}
-                {{--</ul>--}}
+            {{--<h3>Category</h>--}}
+            {{--<ul class="info">--}}
+            {{--<li><a href="dresses.html">Dresses</a></li>--}}
+            {{--<li><a href="sweaters.html">Sweaters</a></li>--}}
+            {{--<li><a href="shirts.html">Shirts</a></li>--}}
+            {{--<li><a href="sarees.html">Sarees</a></li>--}}
+            {{--<li><a href="skirts.html">Shorts & Skirts</a></li>--}}
+            {{--</ul>--}}
             {{--</div>--}}
             <div class="col-md-4 w3_footer_grid">
                 <h3>Profile</h3>
                 <ul class="info">
-                    <li><a href="products.html">Summer Store</a></li>
-                    <li><a href="checkout.html">My Cart</a></li>
+                    <li><a href="javascript:;" id="myProfile">Profile</a></li>
+                    <li><a href="javascript:;" id="myOrders">Orders</a></li>
                 </ul>
+                <script>
+                    $('#myProfile').click(function(){
+                        @if(Auth::guard('customer')->check())
+                        $('#myProfileModal').modal('show');
+                        @else
+                        $('#myModal88').modal('show');
+                        @endif
+                    });
+                    $('#myOrders').click(function(){
+                        @if(Auth::guard('customer')->check())
+                        $('#myOrderModal').modal('show');
+                        @else
+                        $('#myModal88').modal('show');
+                        @endif
+                    });
+                </script>
                 <h4>Follow Us</h4>
                 <div class="agileits_social_button">
                     <ul>
@@ -502,7 +565,7 @@
         <div class="footer-copy1">
             <div class="footer-copy-pos">
                 <a href="#home" class="scroll"><img src="{{asset('assets/website/images/arrow.png')}}" alt=" "
-                                                     class="img-responsive"/></a>
+                                                    class="img-responsive"/></a>
             </div>
         </div>
         {{--<div class="container">--}}
@@ -510,6 +573,306 @@
         {{--</div>--}}
     </div>
 </div>
+<div class="modal fade" id="myProfileModal" tabindex="-1" role="dialog" aria-labelledby="myProfileModal"
+     aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>
+                <h4 class="modal-title" id="myModalLabel">
+                    Profile Information</h4>
+            </div>
+            <div class="modal-body modal-body-sub">
+                <div class="row">
+                    <div class="col-md-8 modal_body_left modal_body_left1"
+                         style="border-right: 1px dotted #C2C2C2;padding-right:3em;">
+                        @if(Auth::guard('customer')->check())
+                            <div class="sap_tabs">
+                                <div id="userTabs" style="display: block; width: 100%; margin: 0px;">
+                                    <ul>
+                                        <li class="resp-tab-item" aria-controls="tab_item-0" role="tab">
+                                            <span>Profile</span></li>
+                                        <li class="resp-tab-item" aria-controls="tab_item-1" role="tab">
+                                            <span>Orders</span></li>
+                                    </ul>
+                                    <br>
+                                    <div class="tab-1 resp-tab-content" aria-labelledby="tab_item-0">
+                                        <div class="facts">
+                                            <div class="register">
+                                                <form action="{{route('updateCustomerProfile')}}" method="post">
+                                                    {{csrf_field()}}
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label for="First Name">First Name</label>
+                                                                <input id="First Name" name="firstName"
+                                                                       placeholder="First Name"
+                                                                       value="{{$customer->firstName}}" type="text">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label for="Last Name">Last Name</label>
+                                                                <input id="Last Name" name="lastName"
+                                                                       placeholder="Last Name"
+                                                                       value="{{$customer->lastName}}" type="text">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <hr>
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label for="email">Email</label>
+                                                                <input id="email" name="email"
+                                                                       value="{{$customer->email}}" placeholder="Email"
+                                                                       type="text" disabled>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label for="gender">Gender</label>
+                                                                <input id="gender" name="gender"
+                                                                       value="{{$customer->gender}}"
+                                                                       placeholder="Gender" type="text">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <hr>
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label for="address">Address</label>
+                                                                <input id="address" name="address"
+                                                                       value="{{$customer->address}}"
+                                                                       placeholder="Address" type="text">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label for="phoneNumber">Mobile Number</label>
+                                                                <input id="phoneNumber" name="phoneNumber"
+                                                                       value="{{$customer->phoneNumber}}"
+                                                                       placeholder="Mobile Number" type="text">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <center>
+                                                        <div class="sign-up">
+                                                            <br>
+                                                            <input type="submit" value="Update Profile"/>
+                                                        </div>
+                                                    </center>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="tab-2 resp-tab-content" aria-labelledby="tab_item-1">
+                                        <div class="facts">
+                                            <div class="register">
+                                                @foreach($myOrders as $order)
+                                                    <form action="#" method="get">
+                                                        <div class="row">
+                                                            <div class="col-md-2">
+                                                                <div class="form-group">
+                                                                    <label for="orderID">OrderID</label>
+                                                                    <input id="orderID" name="orderID"
+                                                                           value="{{$order->orderID}}" type="text"
+                                                                           disabled>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-3">
+                                                                <div class="form-group">
+                                                                    <label for="orderID">Status</label>
+                                                                    <input id="orderID" name="orderID" value="{{($order->status)?'On Way':'In Stock'}}"
+                                                                           type="text" disabled>
+
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-3">
+                                                                <div class="form-group">
+                                                                    <br>
+                                                                    <div class="anchor">
+                                                                        <a href="{{route('myOrders',['orderID'=>$order->orderID])}}">
+                                                                            Details
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            @if($order->status)
+                                                            <div class="col-md-4">
+                                                                <div class="form-group">
+                                                                    <br>
+                                                                <div class="anchor">
+                                                                    <a href="#">
+                                                                        Track &nbsp;
+                                                                        <span class="glyphicon glyphicon-menu-right"
+                                                                                    aria-hidden="true"></span>
+                                                                    </a>
+                                                                </div>
+                                                                </div>
+                                                            </div>
+                                                            @endif
+
+                                                        </div>
+                                                    </form>
+                                                    <hr>
+                                                @endforeach
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        <script src="{{asset('assets/website/js/easyResponsiveTabs.js')}}"
+                                type="text/javascript"></script>
+                        <script type="text/javascript">
+                            $(document).ready(function () {
+                                $('#userTabs').easyResponsiveTabs({
+                                    type: 'default', //Types: default, vertical, accordion
+                                    width: 'auto', //auto or any width like 600px
+                                    fit: true   // 100% fit in a container
+                                });
+                            });
+                        </script>
+                    </div>
+                    <div class="col-md-4 modal_body_right modal_body_right1">
+                        <div class="anchor">
+                            <a href="{{ route('customer_logout') }}"
+                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                Sign Out
+                                &nbsp;&nbsp;
+                                &nbsp;<span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>
+                            </a>
+                            <form id="logout-form" action="{{ route('customer_logout') }}" method="POST"
+
+                                  style="display: none;">
+
+                                {{ csrf_field() }}
+
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="myOrderModal" tabindex="-1" role="dialog" aria-labelledby="myOrderModal"
+     aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>
+                <h4 class="modal-title" id="myOrderModal">
+                    My Orders </h4>
+            </div>
+            <div class="modal-body modal-body-sub">
+                <div class="row">
+                    <div class="col-md-12">
+                        @if(Auth::guard('customer')->check())
+                            <div class="sap_tabs">
+                                <div id="myOrderTabs" style="display: block; width: 100%; margin: 0px;">
+                                    <ul>
+                                        <li class="resp-tab-item" aria-controls="tab_item-0" role="tab">
+                                            <span>Orders</span></li>
+                                    </ul>
+                                    <br>
+                                    <div class="tab-1 resp-tab-content" aria-labelledby="tab_item-0">
+                                        <div class="facts">
+                                            <div class="register">
+                                                @foreach($myOrders as $order)
+                                                    <form action="#" method="get">
+                                                        <div class="row">
+                                                            <div class="col-md-2">
+                                                                <div class="form-group">
+                                                                    <label for="orderID">OrderID</label>
+                                                                    <input id="orderID" name="orderID"
+                                                                           value="{{$order->orderID}}" type="text"
+                                                                           disabled>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-3">
+                                                                <div class="form-group">
+                                                                    <label for="orderID">Status</label>
+                                                                    <input id="orderID" name="orderID" value="{{($order->status)?'On Way':'In Stock'}}"
+                                                                           type="text" disabled>
+
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-3">
+                                                                <div class="form-group">
+                                                                    <br>
+                                                                    <div class="anchor">
+                                                                        <a href="{{route('myOrders',['orderID'=>$order->orderID])}}">
+                                                                            Details
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            @if($order->status)
+                                                                <div class="col-md-4">
+                                                                    <div class="form-group">
+                                                                        <br>
+                                                                        <div class="anchor">
+                                                                            <a href="#">
+                                                                                Track &nbsp;
+                                                                                <span class="glyphicon glyphicon-menu-right"
+                                                                                      aria-hidden="true"></span>
+                                                                            </a>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            @endif
+
+                                                        </div>
+                                                    </form>
+                                                    <hr>
+                                                @endforeach
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                        <script src="{{asset('assets/website/js/easyResponsiveTabs.js')}}"
+                                type="text/javascript"></script>
+                        <script type="text/javascript">
+                            $(document).ready(function () {
+                                $('#myOrderTabs').easyResponsiveTabs({
+                                    type: 'default', //Types: default, vertical, accordion
+                                    width: 'auto', //auto or any width like 600px
+                                    fit: true   // 100% fit in a container
+                                });
+                            });
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    @if($errors->has('order'))
+        $('#myOrderModal').modal('show');
+    @endif
+</script>
+
+<script>
+    $(document).ready(function () {
+       @if($errors->has('showProfile'))
+         $('#myProfileModal').modal('show');
+        @endif
+    });
+</script>
 <!-- //footer -->
 </body>
 </html>

@@ -33,10 +33,12 @@
                         <th>Color</th>
                         <th>Size</th>
                         <th>Price</th>
+                        <th></th>
                         <th>Remove</th>
                     </tr>
                     </thead>
                     @foreach($cartProducts as $key => $cartProduct)
+                        <input type="hidden" name="cartProductIDs[]" value="{{$cartProduct->cartProductID}}">
                         <tr class="rem{{intval($key)+1}}">
                             <td class="invert">{{intval($key)+1}}</td>
                             <td class="invert-image">
@@ -52,6 +54,7 @@
                                         <input type="hidden" id="cartProductID" value="{{$cartProduct->cartProductID}}">
                                         <input type="hidden" id="key" value="{{$key}}" >
                                         <input type="hidden" id="price" value="{{$cartProduct->product->price}}">
+                                        <input type="hidden" id="availableUnits" value="{{$productQuantity[$key]}}">
                                     </div>
                                 </div>
                             </td>
@@ -59,6 +62,13 @@
                             <td class="invert"><span class="colorSquare" style="background: {{$cartProduct->color->colorcode}}"></span> <p style="display: inline;">{{$colorNames[$key]}}</p></td>
                             <td class="invert">{{$cartProduct->size->size}}</td>
                             <td class="invert">EGP &nbsp; <p id="price{{$key}}" style="display: inline;">{{$cartProduct->product->price*$cartProduct->quantity}}</p></td>
+                            <td class="invert">
+                                @if ($errors->has('cartProduct'.$cartProduct->cartProductID))
+                                    <span class="help-block">
+                                        <strong style="color: red;">This product has {{$errors->first('cartProduct'.$cartProduct->cartProductID)}} items remaining </strong>
+                                    </span>
+                                @endif
+                            </td>
                             <td class="invert">
                                 <div class="rem">
                                     <div class="close{{intval($key)+1}}"> </div>
@@ -74,20 +84,24 @@
                                                 type:'GET',
                                                 url:'{{route('removeCartProduct')}}',
                                                 data:{cartProductID:'{{$cartProduct->cartProductID}}'},
-                                                success:function(data){
-
-                                                    $('.rem{{intval($key)+1}}').fadeOut('slow', function(c){
-                                                        $('.rem{{intval($key)+1}}').remove();
-                                                        $('#list{{$key}}').remove();
-                                                        $('#itemsCount').val(newItemsCount);
-                                                        $("[name='finalPrices[]'").each(function () {
-                                                            total += parseInt($(this).text());
+                                                success:function(data) {
+                                                    if (data.msg == 'success') {
+                                                        $('.rem{{intval($key)+1}}').fadeOut('slow', function (c) {
+                                                            $('.rem{{intval($key)+1}}').remove();
+                                                            $('#list{{$key}}').remove();
+                                                            $('#itemsCount').val(newItemsCount);
+                                                            $("[name='finalPrices[]'").each(function () {
+                                                                total += parseInt($(this).text());
+                                                            });
+                                                            $('#totalPrice').text(total);
+                                                            $('#cartTotalMoney').text(total);
+                                                            $('#cartTotalItems').text(newItemsCount);
+                                                            $('#shoppingItemsNumber').text(newItemsCount);
+                                                            if (newItemsCount == 0) {
+                                                                $('#orderButton').hide();
+                                                            }
                                                         });
-                                                        $('#totalPrice').text(total);
-                                                        $('#cartTotalMoney').text(total);
-                                                        $('#cartTotalItems').text(newItemsCount);
-                                                        $('#shoppingItemsNumber').text(newItemsCount);
-                                                    });
+                                                    }
                                                 }
                                             });
 
@@ -117,10 +131,16 @@
                         <li id="totalLi">Total <i>-</i> <span>EGP &nbsp; <p id="totalPrice" style="display: inline;">{{$cartTotalPrice}}</p></span></li>
                     </ul>
                 </div>
-
+            @if($cartItemsCount != 0)
                 <div class="checkout-right-basket">
-                    <a href="products.html">Proceed to Order &nbsp;<span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span></a>
+                    <a href="javascript:;" id="orderButton">Proceed to Order &nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span></a>
                 </div>
+            @endif
+                <script>
+                    $('#orderButton').click(function () {
+                        $('#orderModal').modal('show');
+                    });
+                </script>
                 <div class="clearfix"> </div>
             </div>
         </div>
@@ -131,24 +151,26 @@
             var divUpd = $(this).parent().find('.value'), newVal = parseInt(divUpd.text(), 10)+1;
             var key = $(this).parent().find('#key').val();
             var originalPrice = $(this).parent().find('#price').val();
+            var availableUnits = $(this).parent().find('#availableUnits').val();
             var newPrice = originalPrice*newVal;
             var total = 0 ;
-
-            $.ajax({
-                type:'GET',
-                url:'{{route('cartQuantity')}}',
-                data:{cartProductID:$(this).parent().find('#cartProductID').val(),quantity:newVal},
-                success:function(data){
-                    $('#price'+key).text(newPrice);
-                    $('#price1'+key).text(newPrice);
-                    divUpd.text(newVal);
-                    $("[name='finalPrices[]'").each(function () {
-                        total += parseInt($(this).text());
-                    });
-                    $('#totalPrice').text(total);
-                    $('#cartTotalMoney').text(total);
-                }
-            });
+            if (newVal <= availableUnits) {
+                $.ajax({
+                    type: 'GET',
+                    url: '{{route('cartQuantity')}}',
+                    data: {cartProductID: $(this).parent().find('#cartProductID').val(), quantity: newVal},
+                    success: function (data) {
+                        $('#price' + key).text(newPrice);
+                        $('#price1' + key).text(newPrice);
+                        divUpd.text(newVal);
+                        $("[name='finalPrices[]'").each(function () {
+                            total += parseInt($(this).text());
+                        });
+                        $('#totalPrice').text(total);
+                        $('#cartTotalMoney').text(total);
+                    }
+                });
+            }
         });
         $('.value-minus').on('click', function(){
             var itemsCount = $('#itemsCount').val();
@@ -177,4 +199,65 @@
             }
         });
     </script>
+    <div class="modal fade" id="orderModal" tabindex="-1" role="dialog" aria-labelledby="orderModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        &times;
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">
+                        Order Details</h4>
+                </div>
+                <div class="modal-body modal-body-sub">
+                    <div class="row">
+                        <div class="register">
+                    <form action="{{route('placeOrder')}}" method="post">
+                        {{csrf_field()}}
+                        @foreach($cartProducts as $cartProduct)
+                            <input type="hidden" name="cartProductIDs[]" value="{{$cartProduct->cartProductID}}">
+                        @endforeach
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="First Name">First Name</label>
+                                    <input id="First Name" name="firstName" placeholder="First Name" value="{{$customer->firstName}}" type="text" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="Last Name">Last Name</label>
+                                    <input id="Last Name" name="lastName" placeholder="Last Name" value="{{$customer->lastName}}" type="text" required>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="address">Address</label>
+                                    <input id="address" name="address" value="{{$customer->address}}" placeholder="Address" type="text" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="phoneNumber">Mobile Number</label>
+                                    <input id="phoneNumber" name="phoneNumber" value="{{$customer->phoneNumber}}" placeholder="Mobile Number" type="text" required>
+                                </div>
+                            </div>
+                        </div>
+                        <center>
+                            <div class="sign-up">
+                                <br>
+                                <input type="submit" value="Confirm Order"/>
+                            </div>
+                        </center>
+                    </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection

@@ -6,16 +6,17 @@
             <div class="sliderfig">
                 <ul id="flexiselDemo1">
                     @foreach($suppliers as $supplier)
-                    <li>
-                        <a href="{{route('supplierProducts',['supplierName'=>$supplier->supplierName])}}">
-                            <img src="{{asset('assets/admin/images/logos/'.$supplier->suppImage)}}" alt=" " class="img-responsive" />
-                        </a>
-                    </li>
-                        @endforeach
+                        <li>
+                            <a href="{{route('supplierProducts',['supplierName'=>$supplier->supplierName])}}">
+                                <img src="{{asset('assets/admin/images/logos/'.$supplier->suppImage)}}" alt=" "
+                                     class="img-responsive"/>
+                            </a>
+                        </li>
+                    @endforeach
                 </ul>
             </div>
             <script type="text/javascript">
-                $(window).load(function() {
+                $(document).ready(function () {
                     $("#flexiselDemo1").flexisel({
                         visibleItems: 4,
                         animationSpeed: 1000,
@@ -25,15 +26,15 @@
                         enableResponsiveBreakpoints: true,
                         responsiveBreakpoints: {
                             portrait: {
-                                changePoint:480,
+                                changePoint: 480,
                                 visibleItems: 1
                             },
                             landscape: {
-                                changePoint:640,
-                                visibleItems:2
+                                changePoint: 640,
+                                visibleItems: 2
                             },
                             tablet: {
-                                changePoint:768,
+                                changePoint: 768,
                                 visibleItems: 3
                             }
                         }
@@ -45,3 +46,4 @@
         </div>
     </div>
 @endsection
+

@@ -7,9 +7,12 @@ use App\Category;
 use App\Color;
 use App\ColorConverter;
 use App\Customer;
+use App\Order;
+use App\Orderdetail;
 use App\Product;
 use App\Size;
 use App\Supplier;
+use function Couchbase\basicDecoderV1;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -36,12 +39,31 @@ class WebController extends Controller
 
     public function categoryProducts($gender, $categoryName, Request $request)
     {
+        $genders = ['Men', 'Women', 'Boys', 'Girls'];
+        $map = [];
+        for ($i = 0; $i < count($genders); $i++) {
+            $map[$genders[$i]] = 0;
+        }
+        $genders = [];
         $checkedMap = $this->initializeMap();
         $colorConverter = new ColorConverter();
-        $suppliers = Supplier::all();
+        $brands = $this->getUniqueBrands();
         $colors = $this->getUniqueColors();
         $sizes = $this->getUniqueSizes();
-        $categories = Category::all();
+        $categories = Category::with(['products'])->get();
+        foreach ($categories as $key => $category) {
+            if (count($category->products) == 0) {
+                unset($categories[$key]);
+            } else {
+                foreach ($category->products as $product) {
+                    if ($map[$product->gender] == 0) {
+                        $genders[] = $product->gender;
+                    }
+                    $map[$product->gender] = 1;
+                }
+            }
+            unset($category->products);
+        }
         $colorNames = [];
         foreach ($colors as $color) {
             $colorNames[] = $colorConverter->getApproximateColorName($color->colorcode);
@@ -53,24 +75,43 @@ class WebController extends Controller
             $query->where('productStatus', '1');
         }, 'colors.images', 'colors.sizes' => function ($query) {
             $query->where('availableUnits', '>', 0);
-        }])->orderBy('price',$request->sortBy)->get();
+        }])->orderBy('price', $request->sortBy)->get();
         if ($request->ajax()) {
-            return response()->json(['products' => $this->getPaginatedProducts($categoryProducts, $request->index,$request), 'stop' => $this->stop]);
+            return response()->json(['products' => $this->getPaginatedProducts($categoryProducts, $request->index, $request), 'stop' => $this->stop]);
         }
-        $categoryProducts = $this->getPaginatedProducts($categoryProducts, 0,$request);
+        $categoryProducts = $this->getPaginatedProducts($categoryProducts, 0, $request);
         return view('website.products', ['categories' => $categories
-            , 'gender' => $gender, 'products' => $categoryProducts, 'suppliers' => $suppliers, 'colors' => $colors
-            , 'colorNames' => $colorNames, 'sizes' => $sizes, 'checkedMap' => $checkedMap]);
+            , 'gender' => $gender, 'products' => $categoryProducts, 'brands' => $brands, 'colors' => $colors
+            , 'colorNames' => $colorNames, 'sizes' => $sizes, 'checkedMap' => $checkedMap, 'genders' => $genders]);
     }
 
     public function supplierProducts($supplierName, Request $request)
     {
+        $genders = ['Men', 'Women', 'Boys', 'Girls'];
+        $map = [];
+        for ($i = 0; $i < count($genders); $i++) {
+            $map[$genders[$i]] = 0;
+        }
+        $genders = [];
         $checkedMap = $this->initializeMap();
         $colorConverter = new ColorConverter();
-        $suppliers = Supplier::all();
+        $brands = $this->getUniqueBrands();
         $colors = $this->getUniqueColors();
         $sizes = $this->getUniqueSizes();
-        $categories = Category::all();
+        $categories = Category::with(['products'])->get();
+        foreach ($categories as $key => $category) {
+            if (count($category->products) == 0) {
+                unset($categories[$key]);
+            } else {
+                foreach ($category->products as $product) {
+                    if ($map[$product->gender] == 0) {
+                        $genders[] = $product->gender;
+                    }
+                    $map[$product->gender] = 1;
+                }
+            }
+            unset($category->products);
+        }
         $colorNames = [];
         foreach ($colors as $color) {
             $colorNames[] = $colorConverter->getApproximateColorName($color->colorcode);
@@ -82,26 +123,45 @@ class WebController extends Controller
             $query->where('productStatus', '1');
         }, 'colors.images', 'colors.sizes' => function ($query) {
             $query->where('availableUnits', '>', 0);
-        }])->orderBy('price',$request->sortBy)->get();
+        }])->orderBy('price', $request->sortBy)->get();
         if ($request->ajax()) {
-            return response()->json(['products' => $this->getPaginatedProducts($supplierProducts, $request->index,$request), 'stop' => $this->stop]);
+            return response()->json(['products' => $this->getPaginatedProducts($supplierProducts, $request->index, $request), 'stop' => $this->stop]);
         }
-        $supplierProducts = $this->getPaginatedProducts($supplierProducts, 0,$request);
+        $supplierProducts = $this->getPaginatedProducts($supplierProducts, 0, $request);
         return view('website.products', ['supplierName' => $supplierName,
-            'products' => $supplierProducts, 'suppliers' => $suppliers, 'colors' => $colors,
-            'colorNames' => $colorNames, 'sizes' => $sizes, 'checkedMap' => $checkedMap,'categories'=>$categories]);
+            'products' => $supplierProducts, 'brands' => $brands, 'colors' => $colors,
+            'colorNames' => $colorNames, 'sizes' => $sizes, 'checkedMap' => $checkedMap, 'categories' => $categories, 'genders' => $genders]);
     }
 
     public function filterProducts(Request $request)
     {
+        $genders = ['Men', 'Women', 'Boys', 'Girls'];
+        $map = [];
+        for ($i = 0; $i < count($genders); $i++) {
+            $map[$genders[$i]] = 0;
+        }
+        $genders = [];
         $checkedMap = $this->initializeMap();
         $colorConverter = new ColorConverter();
-        $suppliers = Supplier::all();
+        $brands = $this->getUniqueBrands();
         $colors = $this->getUniqueColors();
         $sizes = $this->getUniqueSizes();
-        $categories = Category::all();
+        $categories = Category::with(['products'])->get();
+        foreach ($categories as $key => $category) {
+            if (count($category->products) == 0) {
+                unset($categories[$key]);
+            } else {
+                foreach ($category->products as $product) {
+                    if ($map[$product->gender] == 0) {
+                        $genders[] = $product->gender;
+                    }
+                    $map[$product->gender] = 1;
+                }
+            }
+            unset($category->products);
+        }
         $colorNames = [];
-        foreach ((array)$request->categories as $category){
+        foreach ((array)$request->categories as $category) {
             $checkedMap[$category] = true;
         }
         foreach ($colors as $color) {
@@ -123,7 +183,7 @@ class WebController extends Controller
         $min = $request->prices[0];
         $max = $request->prices[1];
         $products = Product::where(function ($query) use ($request) {
-            foreach ((array)$request->categories as $key =>$category){
+            foreach ((array)$request->categories as $key => $category) {
                 if ($key == 0)
                     $query->where('categoryID', $category);
                 else
@@ -158,12 +218,12 @@ class WebController extends Controller
                 else
                     $query->orWhere('size', $size);
             }
-        }, 'colors.images'])->orderBy('price',$request->sortBy)->whereBetween('price', [$min, $max])->get();
+        }, 'colors.images'])->orderBy('price', $request->sortBy)->whereBetween('price', [$min, $max])->get();
         if ($request->ajax()) {
-            return response()->json(['products' => $this->getPaginatedProducts($products, $request->index,$request), 'stop' => $this->stop]);
+            return response()->json(['products' => $this->getPaginatedProducts($products, $request->index, $request), 'stop' => $this->stop]);
         }
-        $products = $this->getPaginatedProducts($products, 0,$request);
-        return view('website.products', ['categories'=>$categories,'products' => $products, 'suppliers' => $suppliers, 'colors' => $colors, 'colorNames' => $colorNames, 'sizes' => $sizes, 'checkedMap' => $checkedMap]);
+        $products = $this->getPaginatedProducts($products, 0, $request);
+        return view('website.products', ['genders' => $genders, 'categories' => $categories, 'products' => $products, 'brands' => $brands, 'colors' => $colors, 'colorNames' => $colorNames, 'sizes' => $sizes, 'checkedMap' => $checkedMap]);
     }
 
     public function product($productName, $colorID)
@@ -176,28 +236,63 @@ class WebController extends Controller
             return back();
         $product = Product::where('productID', $productID)->with(['colors' => function ($query) use ($colorID) {
             $query->where('colorID', $colorID);
-        }, 'colors.images', 'colors.sizes'])->first();
+        }, 'colors.images', 'colors.sizes' => function ($query) {
+            $query->where('availableUnits', '>', 0);
+        }])->first();
+
         $mainColorName = $colorConverter->getApproximateColorName($product->colors[0]->colorcode);
         $otherColorsNames = [];
-        $otherColors = Color::where('productID', $productID)->where('colorID', '!=', $colorID)->get();
+        $otherColors = Color::where('productID', $productID)->where('colorID', '!=', $colorID)->where('productStatus','1')->get();
         foreach ($otherColors as $otherColor) {
             $otherColorsNames[] = $colorConverter->getApproximateColorName($otherColor->colorcode);
+        }
+        if (count($product->colors[0]->sizes) == 0) {
+            return view('website.single_product', ['product' => $product, 'otherColors' => $otherColors, 'mainColorName' => $mainColorName, 'otherColorsNames' => $otherColorsNames])->withErrors(['msg' => 'Sorry this product has finished', 'disable' => true]);
+
         }
         return view('website.single_product', ['product' => $product, 'otherColors' => $otherColors, 'mainColorName' => $mainColorName, 'otherColorsNames' => $otherColorsNames]);
     }
 
-    public function addToCart(Request $request)
+
+    public function updateProfile(Request $request)
     {
         $customer = Customer::find(Auth::guard('customer')->user()->customerID);
-        $productExists = Cartproduct::where('productID', $request->productID)->where('sizeID', $request->sizeID)->where('colorID', $request->colorID)->where('customerID', $customer->customerID)->first();
-        $cartProduct = new Cartproduct();
-        $cartProduct->productID = $request->productID;
-        $cartProduct->sizeID = $request->sizeID;
-        $cartProduct->colorID = $request->colorID;
+        if ($request->firstName)
+            $customer->firstName = $request->firstName;
+        if ($request->lastName)
+            $customer->lastName = $request->lastName;
+        if ($request->address)
+            $customer->address = $request->address;
+        if ($request->phoneNumber)
+            $customer->phoneNumber = $request->phoneNumber;
+        $customer->update();
+        return back();
+    }
+
+    public function addToCart(Request $request)
+    {
+        $size = Size::find($request->sizeID);
+        if (!$size) {
+            return redirect()->back()->withErrors(['msg' => 'Sorry this product has finished', 'disabled' => true]);
+        }
+        $customer = Customer::find(Auth::guard('customer')->user()->customerID);
+        $product = Product::with(['colors' => function ($query) use ($request) {
+            $query->where('colorID', $request->colorID);
+        }, 'colors.sizes' => function ($query) use ($request, $size) {
+            $query->where('size', $size->size);
+        }])->where('productID', $request->productID)->first();
+        if ($product->colors[0]->sizes[0]->pivot->availableUnits == 0) {
+            return redirect()->back()->withErrors(['msg' => 'Sorry this size has finished']);
+        }
+        $productExists = Cartproduct::where(['customerID' => $customer->customerID, 'productID' => $request->productID, 'colorID' => $request->colorID, 'sizeID' => $request->sizeID])->first();
         if ($productExists) {
             $productExists->quantity++;
             $productExists->update();
         } else {
+            $cartProduct = new Cartproduct();
+            $cartProduct->productID = $request->productID;
+            $cartProduct->sizeID = $request->sizeID;
+            $cartProduct->colorID = $request->colorID;
             $customer->cartproducts()->save($cartProduct);
         }
         return redirect()->route('myCart');
@@ -205,16 +300,29 @@ class WebController extends Controller
 
     public function myCart()
     {
+        $productQuantity = [];
         $colorConverter = new ColorConverter();
         $cartProducts = Cartproduct::where('customerID', Auth::guard('customer')->user()->customerID)
-            ->with(['product', 'color', 'size', 'color.images' => function ($query) {
+            ->with(['product', 'color', 'size', 'color.sizes', 'color.images' => function ($query) {
                 $query->where('type', 'main');
             }])->get();
         $colorNames = [];
-        foreach ($cartProducts as $cartProduct) {
-            $colorNames[] = $colorConverter->getApproximateColorName($cartProduct->color->colorcode);
+        foreach ($cartProducts as $key => $cartProduct) {
+            foreach ($cartProduct->color->sizes as $size) {
+                if ($size->sizeID == $cartProduct->size->sizeID) {
+                    $productQuantity[$key] = $size->pivot->availableUnits;
+                    if($cartProduct->quantity >  $size->pivot->availableUnits) {
+                        $cartProduct->quantity = $size->pivot->availableUnits;
+                        $cartProduct->update();
+                    }
+                    break;
+                }
+            }
         }
-        return view('website.cart', ['cartProducts' => $cartProducts, 'colorNames' => $colorNames]);
+        foreach ($cartProducts as $key => $cartProduct) {
+            $colorNames[$key] = $colorConverter->getApproximateColorName($cartProduct->color->colorcode);
+        }
+        return view('website.cart', ['cartProducts' => $cartProducts, 'colorNames' => $colorNames, 'productQuantity' => $productQuantity]);
     }
 
     public function removeCartProduct(Request $request)
@@ -231,28 +339,101 @@ class WebController extends Controller
         return response()->json(['msg' => $request->quantity], 200);
     }
 
-    public function emptyCart(Request $request){
+    public function emptyCart(Request $request)
+    {
         Cartproduct::where('customerID', Auth::guard('customer')->user()->customerID)->delete();
-        return response()->json(['msg'=>'done']);
+        return response()->json(['msg' => 'done']);
     }
 
-    public function myOrders(Request $request)
+    public function placeOrder(Request $request)
     {
-        return view('website.orders');
+        foreach ($request->cartProductIDs as $cartProductID) {
+            $cartProduct = Cartproduct::where('cartProductID', $cartProductID)->with(['color', 'color.sizes'])->first();
+            foreach ($cartProduct->color->sizes as $size) {
+                if ($cartProduct->sizeID == $size->sizeID && ($size->pivot->availableUnits < $cartProduct->quantity||$cartProduct->quantity == 0)) {
+                    return back()->withErrors(['cartProduct' . $cartProductID => $size->pivot->availableUnits]);
+                }
+                if ($cartProduct->sizeID == $size->sizeID)
+                    break;
+            }
+        }
+        $order = new Order();
+        $order->customerID = Auth::guard('customer')->user()->customerID;
+        $order->address = $request->address;
+        $order->name = $request->firstName . ' ' . $request->lastName;
+        $order->phone = $request->phoneNumber;
+        $order->save();
+        foreach ($request->cartProductIDs as $cartProductID) {
+            $cartProduct = Cartproduct::where('cartProductID', $cartProductID)->with(['color', 'color.sizes'])->first();
+            foreach ($cartProduct->color->sizes as $size) {
+                if ($cartProduct->sizeID == $size->sizeID ) {
+                    $size->pivot->availableUnits -= $cartProduct->quantity;
+                    $size->pivot->update();
+                    break;
+                }
+            }
+            $product = Product::find($cartProduct->productID);
+            $orderDetails = new Orderdetail();
+            $orderDetails->productID = $cartProduct->productID;
+            $orderDetails->sizeID = $cartProduct->sizeID;
+            $orderDetails->colorID = $cartProduct->colorID;
+            $orderDetails->quantity = $cartProduct->quantity;
+            $orderDetails->supplierID = $product->supplierID;
+            $order->orderdetails()->save($orderDetails);
+            $cartProduct->delete();
+        }
+        return redirect()->route('index')->withErrors(['order' => 'show']);
+//        $order->orderdetails
     }
+
+    public function myOrders($orderID)
+    {
+        $colorNames = [];
+        $colorConverter = new ColorConverter();
+        $order = Order::where('orderID', $orderID)->with(['orderdetails', 'orderdetails.product', 'orderdetails.color', 'orderdetails.size'])->first();
+        if (!$order)
+            return redirect()->route('index');
+        foreach ($order->orderdetails as $key => $orderdetail) {
+            $colorNames[$key] = $colorConverter->getApproximateColorName($orderdetail->color->colorcode);
+        }
+        return view('website.orders')->with(['orderDetails' => $order->orderdetails, 'colorNames' => $colorNames]);
+    }
+
+    public function cancelOrder(Request $request)
+    {
+        $orderDetail = Orderdetail::find($request->orderDetailID);
+        $orderID = $orderDetail->orderID;
+        $orderDetail->delete();
+        $order = Order::where('orderID', $orderID)->with(['orderdetails'])->first();
+        if (count($order->orderdetails) == 0) {
+            $order->delete();
+        }
+        return response()->json(['msg' => 'success']);
+    }
+
     public function getUniqueSizes()
     {
-        $sizes = Size::all();
         $map = [];
         $uniqueSizes = [];
-        foreach ($sizes as $size) {
-            $map[(string)$size->size] = 0;
-        }
-        foreach ($sizes as $size) {
-            if ($map[(string)$size->size] == 0) {
-                $uniqueSizes[] = $size;
+        $colors = Color::with(['sizes' => function ($query) {
+            $query->where('availableUnits', '>', 0);
+        }])->where('productStatus', 1)->get();
+        foreach ($colors as $key => $color) {
+            if (count($color->sizes) == 0) {
+                unset($colors[$key]);
+            } else {
+                foreach ($color->sizes as $size) {
+                    $map[(string)$size->size] = 0;
+                }
             }
-            $map[(string)$size->size]++;
+        }
+        foreach ($colors as $color) {
+            foreach ($color->sizes as $size) {
+                if ($map[(string)$size->size] == 0) {
+                    $uniqueSizes[] = $size;
+                }
+                $map[(string)$size->size]++;
+            }
         }
         usort($uniqueSizes, function ($a, $b) {
             return $a['size'] <=> $b['size'];
@@ -262,13 +443,18 @@ class WebController extends Controller
 
     public function getUniqueColors()
     {
-        $colors = Color::all();
         $map = [];
         $uniqueColors = [];
-        foreach ($colors as $color) {
-            $map[(string)$color->colorcode] = 0;
+        $colors = Color::with(['sizes' => function ($query) {
+            $query->where('availableUnits', '>', 0);
+        }])->where('productStatus', 1)->get();
+        foreach ($colors as $key => $color) {
+            if (count($color->sizes) == 0) {
+                unset($colors[$key]);
+            } else {
+                $map[(string)$color->colorcode] = 0;
+            }
         }
-
         foreach ($colors as $color) {
             if ($map[(string)$color->colorcode] == 0) {
                 $uniqueColors[] = $color;
@@ -278,24 +464,40 @@ class WebController extends Controller
         return $uniqueColors;
     }
 
+    public function getUniqueBrands()
+    {
+        $map = [];
+        $uniqueBrands = [];
+        $brands = Product::select('brand')->get();
+        foreach ($brands as $brand) {
+            $map[(string)$brand->brand] = 0;
+        }
+        foreach ($brands as $brand) {
+            if ($map[(string)$brand->brand] == 0) {
+                $uniqueBrands[] = $brand->brand;
+            }
+            $map[(string)$brand->brand]++;
+        }
+        return $uniqueBrands;
+    }
+
     public function initializeMap()
     {
         $checkedMap = [];
         $categories = Category::all();
-        $colors = Color::all();
-        $suppliers = Supplier::all();
-        $sizes = Size::all();
-        foreach ($colors as $color) {
-            $checkedMap[$color->colorcode] = false;
-        }
-        foreach ($categories as $category){
+        $colors = $this->getUniqueColors();
+        $brands = $this->getUniqueBrands();
+        foreach ($categories as $category) {
             $checkedMap[$category->categoryID] = false;
         }
-        foreach ($sizes as $size) {
-            $checkedMap[$size->size] = false;
+        foreach ($colors as $color) {
+            $checkedMap[$color->colorcode] = false;
+            foreach ($color->sizes as $size) {
+                $checkedMap[$size->size] = false;
+            }
         }
-        foreach ($suppliers as $supplier) {
-            $checkedMap[$supplier->supplierName] = false;
+        foreach ($brands as $brand) {
+            $checkedMap[$brand] = false;
         }
         $checkedMap['Men'] = false;
         $checkedMap['Women'] = false;
@@ -304,7 +506,7 @@ class WebController extends Controller
         return $checkedMap;
     }
 
-    public function getPaginatedProducts($products, $index,Request $request)
+    public function getPaginatedProducts($products, $index, Request $request)
     {
         $temp = [];
         foreach ($products as $key => $product) {
@@ -343,7 +545,7 @@ class WebController extends Controller
             $obj['productName'] = $product->productName;
             $obj['price'] = $product->price;
             $obj['brand'] = $product->brand;
-            $obj['color'] = $product->colors[$first]->colorID;
+            $obj['color'] = $product->colors;
             $temp[] = $obj;
         }
         return $temp;

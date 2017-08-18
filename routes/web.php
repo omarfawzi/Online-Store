@@ -9,13 +9,12 @@ $api = app('Dingo\Api\Routing\Router');
 Route::get('/','WebController@index')->name('index');
 
 Route::group(['prefix'=>'/'],function(){
-    Route::group(['prefix'=>'auth'],function (){
+    Route::group(['prefix'=>'auth','middleware'=>'App\Http\Middleware\WebRedirect'],function (){
         Route::get('{provider}', 'WebLoginController@redirectToProvider')->name('socialAuth');
         Route::get('{provider}/callback', 'WebLoginController@handleProviderCallback');
+        Route::post('customer_register', 'WebRegisterController@register')->name('customer_register');
+        Route::post('customer_login', 'WebLoginController@login')->name('customer_login');
     });
-    Route::post('customer_register', 'WebRegisterController@register')->name('customer_register');
-    Route::post('customer_login', 'WebLoginController@login')->name('customer_login');
-    Route::post('customer_logout', 'WebLoginController@logout')->name('customer_logout');
     Route::group(['prefix'=>'products'],function (){
         Route::get('{gender}/{categoryName}','WebController@categoryProducts')->name('categoryProducts');
         Route::get('{supplierName}','WebController@supplierProducts')->name('supplierProducts');
@@ -26,12 +25,17 @@ Route::group(['prefix'=>'/'],function(){
         Route::get('myCart','WebController@myCart')->name('myCart');
         Route::get('removeCartProduct','WebController@removeCartProduct')->name('removeCartProduct');
         Route::get('cartQuantity','WebController@cartQuantity')->name('cartQuantity');
-        Route::get('myOrders','WebController@myOrders')->name('myOrders');
         Route::get('emptyCart','WebController@emptyCart')->name('emptyCart');
+        Route::post('updateProfile','WebController@updateProfile')->name('updateCustomerProfile');
+        Route::post('placeOrder','WebController@placeOrder')->name('placeOrder');
+        Route::post('customer_logout', 'WebLoginController@logout')->name('customer_logout');
+        Route::get('myOrders/{orderID}','WebController@myOrders')->name('myOrders');
+        Route::get('cancelOrder','WebController@cancelOrder')->name('cancelOrder');
     });
     Route::get('sortList','WebController@sortList')->name('sortList');
     Route::get('filterProducts','WebController@filterProducts')->name('filterProducts');
 });
+
 // AdminPanel's routes
 Route::group(['prefix'=>'admin'],function (){
     Auth::routes();
@@ -63,14 +67,15 @@ Route::group(['prefix'=>'admin'],function (){
         Route::get('/ApprovedProducts',['uses' => 'AdminController@ApprovedProducts', 'as' => 'ApprovedProducts']);
         Route::get('/WaitingProducts',['uses' => 'AdminController@WaitingProducts', 'as' => 'WaitingProducts']);
         Route::get('/RejectedProducts',['uses' => 'AdminController@RejectedProducts', 'as' => 'RejectedProducts']);
-        Route::get('/product/{productID}/{colorID}',['uses' => 'AdminController@product', 'as' => 'product']);
+        Route::get('product/{productName}/{colorID}','AdminController@product')->name('product');
         Route::get('/removeColor/{productID}/{colorID}',['uses'=>'AdminController@removeColor','as'=>'removeProduct']);
         Route::get('/removeWholeProduct/{productID}',['uses'=>'AdminController@removeWholeProduct','as'=>'removeWholeProduct']);
         Route::get('/notifications',['uses'=>'AdminController@notifications','as'=>'notifications']);
         Route::post('/updateProduct',['uses' => 'AdminController@updateProduct','as'=>'updateProduct']);
         Route::get('/setMain/{colorID}/{imageID}',['uses' => 'AdminController@setMain','as'=>'setMain']);
         Route::get('/removeImage/{colorID}/{imageID}',['uses' => 'AdminController@removeImage','as'=>'removeImage']);
-
+        Route::get('/orders',['uses'=>'AdminController@orders','as'=>'orders']);
+        Route::get('/orderDetails/{orderID}',['uses'=>'AdminController@orderDetails','as'=>'orderDetails']);
         Route::get('/tracking',function(){
             return view('tracking');
         });
@@ -98,6 +103,9 @@ $api->version('v1',function ($api){
     $api->post('cartProducts','App\Http\Controllers\APIController@cartProducts');
     $api->post('placeOrder','App\Http\Controllers\APIController@placeOrder');
     $api->post('updateProfile','App\Http\Controllers\APIController@updateProfile');
+    $api->post('showProfile','App\Http\Controllers\APIController@showProfile');
+    $api->post('filterComponents','App\Http\Controllers\APIController@filterComponents');
+    $api->post('filterBy','App\Http\Controllers\APIController@filterBy');
 });
 
 Route::any('{catchall}', function ($page) {

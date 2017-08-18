@@ -7,9 +7,12 @@
             jQuery.ajaxSetup({
                 beforeSend: function () {
                     $('#loader').show();
+                    $('#submitFilter').hide();
                 },
                 complete: function () {
                     $('#loader').hide();
+                    $('#submitFilter').show();
+
                 },
                 success: function () {
                 }
@@ -61,15 +64,14 @@
                                          aria-labelledby="headingOne">
                                         <div class="panel-body">
                                             <ul style="list-style: none">
-                                                @foreach($suppliers as $supplier)
+                                                @foreach($brands as $brand)
                                                     <li>
                                                         <label style="display: inline" class="checkbox"><input
                                                                     type="checkbox" name="brands[]"
-                                                                    value="{{$supplier->supplierName}}" {{($checkedMap[$supplier->supplierName])?'checked':''}}>
+                                                                    value="{{$brand}}" {{($checkedMap[$brand])?'checked':''}}>
                                                             <i></i>
                                                         </label>
-                                                        <span>{{$supplier->supplierName}}</span>
-
+                                                        <span>{{$brand}}</span>
                                                     </li>
                                                 @endforeach
                                             </ul>
@@ -183,36 +185,38 @@
                                          aria-labelledby="headingFour">
                                         <div class="panel-body">
                                             <ul>
-                                                <li>
-                                                    <label style="display: inline" class="checkbox"><input value="Men"
-                                                                                                           type="checkbox"
-                                                                                                           name="gender[]" {{($checkedMap['Men'])?'checked':''}}>
-                                                        <i></i>
-                                                    </label>
-                                                    <span>Men</span>
-                                                </li>
-                                                <li>
-                                                    <label style="display: inline" class="checkbox"><input value="Women"
-                                                                                                           type="checkbox"
-                                                                                                           name="gender[]" {{($checkedMap['Women'])?'checked':''}}>
-                                                        <i></i>
-                                                    </label>
-                                                    <span>Women</span>
-                                                </li>
-                                                <li>
-                                                    <label style="display: inline" class="checkbox"><input value="Girls"
-                                                                                                           type="checkbox"
-                                                                                                           name="gender[]" {{($checkedMap['Girls'])?'checked':''}}>
-                                                        <i></i>
-                                                    </label>
-                                                    <span>Girls</span>
-                                                </li>
-                                                <li>
-                                                    <label style="display: inline" class="checkbox"><input value="Boys" type="checkbox" name="gender[]" {{($checkedMap['Boys'])?'checked':''}}>
-                                                        <i></i>
-                                                    </label>
-                                                    <span>Boys</span>
-                                                </li>
+                                                @foreach($genders as $gender)
+                                                    <li>
+                                                        <label style="display: inline" class="checkbox"><input value="{{$gender}}" type="checkbox" name="gender[]" {{($checkedMap[$gender])?'checked':''}}>
+                                                            <i></i>
+                                                        </label>
+                                                        <span>{{$gender}}</span>
+                                                    </li>
+                                                    @endforeach
+                                                {{--<li>--}}
+                                                    {{--<label style="display: inline" class="checkbox"><input value="Men" type="checkbox" name="gender[]" {{($checkedMap['Men'])?'checked':''}}>--}}
+                                                        {{--<i></i>--}}
+                                                    {{--</label>--}}
+                                                    {{--<span>Men</span>--}}
+                                                {{--</li>--}}
+                                                {{--<li>--}}
+                                                    {{--<label style="display: inline" class="checkbox"><input value="Women" type="checkbox" name="gender[]" {{($checkedMap['Women'])?'checked':''}}>--}}
+                                                        {{--<i></i>--}}
+                                                    {{--</label>--}}
+                                                    {{--<span>Women</span>--}}
+                                                {{--</li>--}}
+                                                {{--<li>--}}
+                                                    {{--<label style="display: inline" class="checkbox"><input value="Girls" type="checkbox" name="gender[]" {{($checkedMap['Girls'])?'checked':''}}>--}}
+                                                        {{--<i></i>--}}
+                                                    {{--</label>--}}
+                                                    {{--<span>Girls</span>--}}
+                                                {{--</li>--}}
+                                                {{--<li>--}}
+                                                    {{--<label style="display: inline" class="checkbox"><input value="Boys" type="checkbox" name="gender[]" {{($checkedMap['Boys'])?'checked':''}}>--}}
+                                                        {{--<i></i>--}}
+                                                    {{--</label>--}}
+                                                    {{--<span>Boys</span>--}}
+                                                {{--</li>--}}
                                             </ul>
                                         </div>
                                     </div>
@@ -291,10 +295,10 @@
 //                                    var uri = encodeURI(window.location.href.split('?')[1]) ;
 //                                    window.history.replaceState({}, null, link+'?'+uri );
                                     $("[name='controlDiv[]']").remove();
-                                    $('#loadMore').hide();
+                                    //$('#loadMore').hide();
                                     $('#counter').val(0);
                                     $('#loadMore').click();
-                                    $('#loadMore').show();
+                                    //$('#loadMore').show();
                                 });
                             </script>
                             {{--<center>--}}
@@ -328,10 +332,8 @@
                     <script>
                         $('#popularity').change(function () {
                             $("[name='controlDiv[]']").remove();
-                            $('#loadMore').hide();
                             $('#counter').val(0);
                             $('#loadMore').click();
-                            $('#loadMore').show();
                         });
                     </script>
                     <div id="productsDiv" class="w3ls_dresses_grid_right_grid3">
@@ -340,16 +342,16 @@
                                  class="col-md-4 agileinfo_new_products_grid agileinfo_new_products_grid_dresses">
                                 <div class="agile_ecommerce_tab_left dresses_grid">
                                     <div class="hs-wrapper hs-wrapper2">
-                                        @for($i = 0 ; $i < 6/count($product->colors[0]->images);$i++)
-                                            @foreach($product->colors[0]->images as $image)
+                                        @for($i = 0 ; $i < 6/count($product->colors[key(reset($product->colors))]->images);$i++)
+                                            @foreach($product->colors[key(reset($product->colors))]->images as $image)
                                                 <img src="{{asset('assets/admin/images/products/'.$image->image)}}"
-                                                     alt=" " class="img-responsive"/>
+                                                      class="loading img-responsive"/>
                                             @endforeach
                                         @endfor
                                         <div class="w3_hs_bottom w3_hs_bottom_sub1">
                                             <ul>
                                                 <li>
-                                                    <a href="{{route('singleProduct',['productName'=>$product->productName,'colorID'=>$product->colors[0]->colorID])}}"><span
+                                                    <a href="{{route('singleProduct',['productName'=>$product->productName,'colorID'=>$product->colors[key(reset($product->colors))]->colorID])}}"><span
                                                                 class="glyphicon glyphicon-eye-open"
                                                                 aria-hidden="true"></span></a>
                                                 </li>
@@ -359,16 +361,19 @@
                                     <br>
                                     <p style="color: grey;">{{$product->brand}}</p>
                                     <h5 style="display: inline;"><a
-                                                href="{{route('singleProduct',['productName'=>$product->productName,'colorID'=>$product->colors[0]->colorID])}}">{{$product->productName}}</a>
+                                                href="{{route('singleProduct',['productName'=>$product->productName,'colorID'=>$product->colors[key(reset($product->colors))]->colorID])}}">{{$product->productName}}</a>
                                     </h5>
                                     <div class="simpleCart_shelfItem">
                                         <small style="color: grey;">EGP&nbsp;{{$product->price}}</small>
                                         <br>
+                                        <br>
                                         {{--<p><a href="#" name="addtoCart[]" data-price={{$product->price}}>Add to cart</a></p>--}}
-                                        {{--@foreach($product->colors as $color)--}}
-                                        {{--<span class="colorSquare" style="background: {{$color->colorcode}}"></span>--}}
-                                        {{--@endforeach--}}
-                                        {{--<br>--}}
+                                        @foreach($product->colors as $color)
+                                            <a href="{{route('singleProduct',['productName'=>$product->productName,'colorID'=>$color->colorID])}}">
+                                                <span class="colorSquare" style="background: {{$color->colorcode}}">&nbsp;</span>&nbsp;
+                                            </a>
+                                        @endforeach
+                                        <br>
                                         {{--@foreach($product->colors as $color)--}}
                                         {{--<span class="colorSquare" style="background: {{$color->colorcode}}"></span>--}}
                                         {{--@endforeach--}}
