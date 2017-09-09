@@ -5,7 +5,7 @@
         <div class="container">
             <ul>
                 <li><a href="{{route('index')}}"><span class="glyphicon glyphicon-home" aria-hidden="true"></span> Home</a> <i>/</i></li>
-                <li><a href="{{route('supplierProducts',['supplierName'=>$product->brand])}}">Products</a> <i>/</i></li>
+                <li><a href="{{route('supplierProducts',['supplierName'=>$product->supplier->supplierName])}}">{{strtoupper($product->supplier->supplierName)}} Products</a> <i>/</i></li>
                 <li>{{$product->productName}}</li>
             </ul>
         </div>
@@ -42,7 +42,7 @@
             <form id="singleForm" method="POST" action="{{route('addToCart')}}">
                 {{csrf_field()}}
                 <input type="hidden" name="productID" value="{{$product->productID}}">
-            <div class="col-md-3 single-right">
+            <div class="col-md-8 single-right">
                 <h3>{{$product->productName}}</h3>
                 <div class="rating1">
 					<span class="starRating">
@@ -131,7 +131,7 @@
                 </script>
             </div>
             </form>
-            <div class="col-md-5 single-right">
+            <div class="col-md-12 single-right">
                 <div class="sap_tabs">
                     <div id="horizontalTab1" style="display: block; width: 100%; margin: 0px;">
                         <ul>
@@ -139,7 +139,7 @@
                         </ul>
                         <div class="tab-1 resp-tab-content additional_info_grid" aria-labelledby="tab_item-0">
                             <h3>{{$product->productName}}</h3>
-                            <h5>Brand : {{$product->brand}}</h5>
+                            <h5>Brand : {{strtoupper($product->brand)}}</h5>
                             <br>
                             <h5>Description : {{(strlen($product->description)==0)?'None':''}}{{$product->description}}</h5>
                         </div>

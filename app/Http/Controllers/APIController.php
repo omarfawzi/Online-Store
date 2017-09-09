@@ -8,6 +8,8 @@ use App\Color;
 use App\Customer;
 use App\Favourite;
 use App\Image;
+use App\Order;
+use App\Orderdetail;
 use App\Product;
 use App\Size;
 use App\Supplier;
@@ -52,9 +54,11 @@ class APIController extends Controller
     public function login(Request $request)
     {
         $customer = Customer::where('email', $request->email)->first();
-        if ($customer && Hash::check($request->password, $customer->password))
-            return response()->json(['valid' => 'true'], 200);
-        return response()->json(['valid' => 'false'], 200);
+        if(!$customer)
+            return response()->json(['valid' => '0','error'=>'email'], 200);
+        if (!Hash::check($request->password, $customer->password))
+            return response()->json(['valid' => '0','error'=>'password'], 200);
+        return response()->json(['valid' => '1'], 200);
     }
 
     public function fbLogin(Request $request)
@@ -84,21 +88,20 @@ class APIController extends Controller
             $customer = new Customer();
             $customer->email = $request->email;
             $customer->password = bcrypt($request->password);
-            $customer->gender = $request->gender;
             $customer->save();
 
             return response()->json(['valid' => 'true'], 200);
         }
     }
 
-    public function track(Request $request)
-    {
-        $users = User::get(['id']);
-        foreach ($users as $user) {
-            $this->pusher->trigger((string)$user->id, 'tracking', ['longitude' => $request->longitude, 'latitude' => $request->latitude]);
-        }
-        // DB::table('test')->insert(['longitude'=>$request->longitude,'latitude'=>$request->latitude]);
-    }
+//    public function track(Request $request)
+//    {
+//        $users = User::get(['id']);
+//        foreach ($users as $user) {
+//            $this->pusher->trigger((string)$user->id, 'tracking', ['longitude' => $request->longitude, 'latitude' => $request->latitude]);
+//        }
+//        // DB::table('test')->insert(['longitude'=>$request->longitude,'latitude'=>$request->latitude]);
+//    }
 
     public function products()
     {
@@ -330,21 +333,12 @@ class APIController extends Controller
 
     public function cartProductQuantity(Request $request)
     {
-        if (!$request->provider_id)
-            $request->provider_id = -1 ;
-        $customer = Customer::where('email', $request->email)->orWhere('provider_id', (int)($request->provider_id))->first();
-        if (!$customer)
-            return response()->json(['status' => 'failure'], 401);
-        $cartProduct = Cartproduct::find($request->cartProductID);
-        $cartProduct->quantity = $request->quantity;
-        $cartProduct->update();
-        return response()->json(['status' => 'success'], 200);
-    }
-
-    public function removeCartProduct(Request $request)
-    {
-        $cartProductID = (int)($request->cartProductID);
-        Cartproduct::where('cartProductID', $cartProductID)->delete();
+        $cartQuantities = json_decode($request->cartQuantities) ;
+        foreach($cartQuantities as $cartQuantity) {
+            $cartProduct = Cartproduct::find((int)$cartQuantity->cartProductID);
+            $cartProduct->quantity = (int) $cartQuantity->quantity ;
+            $cartProduct->update() ;
+        }
         return response()->json(['status' => 'success'], 200);
     }
 
@@ -357,33 +351,123 @@ class APIController extends Controller
         if ($customer)
             $customerID = $customer->customerID;
         else
-            return response()->json(['status' => 'failure'], 401);
-        $cartProducts = Cartproduct::with(['product', 'color', 'size', 'color.images'])->where('customerID', $customerID)->get();
+            return response()->json(['status' => 'failure'], 200);
+        $cartProducts = Cartproduct::with(['product', 'color', 'size','color.sizes','color.images'])->where('customerID', $customerID)->get();
         $temp = [];
         $cartProduct = null;
-        foreach ($cartProducts as $cartproduct) {
-            $cartProduct['cartProductID'] = $cartproduct->cartProductID;
-            $cartProduct['image'] = $this->productImages . $cartproduct->color->images[0]->image;
-            $cartProduct['productName'] = $cartproduct->product->productName;
-            $cartProduct['quantity'] = $cartproduct->quantity;
-            $cartProduct['size'] = $cartproduct->size->size;
-            $cartProduct['price'] = $cartproduct->product->price;
+        foreach ($cartProducts as $cartProductItem) {
+            $cartProduct['cartProductID'] = $cartProductItem->cartProductID;
+            $cartProduct['image'] = $this->productImages . $cartProductItem->color->images[0]->image;
+            $cartProduct['productName'] = $cartProductItem->product->productName;
+            $cartProduct['quantity'] = $cartProductItem->quantity;
+            $cartProduct['size'] = $cartProductItem->size->size;
+            $cartProduct['price'] = $cartProductItem->product->price;
+            foreach ($cartProductItem->color->sizes as $size) {
+                if ($cartProductItem->sizeID == $size->sizeID) {
+                    $cartProduct['availableUnits'] = $size->pivot->availableUnits;
+                    break;
+                }
+            }
             array_push($temp, $cartProduct);
         }
         return response()->json(['cartProducts' => $temp]);
     }
 
+    public function removeCartProduct(Request $request)
+    {
+        $cartProductsID=json_decode($request->cartProductsID);
+        foreach ($cartProductsID as $cartProductID){
+            Cartproduct::where('cartProductID', (int)$cartProductID)->delete();
+        }
+        return response()->json(['status' => 'success'], 200);
+    }
+
     public function placeOrder(Request $request)
     {
-        DB::table('test')->insert(['test' => serialize(($request->all()))]);
+        $customer = Customer::where('email',$request->email)->first();
+        $cartProducts = Cartproduct::where('customerID',$customer->customerID)->with(['color','color.sizes'])->get();
+        $availableCartProducts = [];
+        $flag = false;
+        foreach ($cartProducts as $cartProduct) {
+            foreach ($cartProduct->color->sizes as $size) {
+                if ($cartProduct->sizeID == $size->sizeID) {
+                    if ($size->pivot->availableUnits < $cartProduct->quantity) {
+                        $obj = [];
+                        $obj['cartProductID'] = $cartProduct->cartProductID;
+                        $obj['availableUnits'] = $size->pivot->availableUnits;
+                        $availableCartProducts[] =  $obj;
+                        $flag = true;
+                    }
+                    break;
+                }
+            }
+        }
+        if ($flag)
+            return response()->json(['availableCartProducts'=>$availableCartProducts,'status'=>'failure'],200);
+        $order = new Order();
+        $order->customerID = (int) $customer->customerID;
+        $order->address = $request->address;
+        $order->phone = $request->mobileNumber;
+        $order->name = $request->firstName . ' ' . $request->lastName;
+        $order->save();
+        foreach ($cartProducts as $cartProduct){
+            $product = Product::find($cartProduct->productID);
+            foreach ($cartProduct->color->sizes as $size) {
+                if ($cartProduct->sizeID == $size->sizeID ) {
+                    $size->pivot->availableUnits -= $cartProduct->quantity;
+                    $size->pivot->update();
+                    break;
+                }
+            }
+            $orderDetails = new Orderdetail();
+            $orderDetails->quantity = $cartProduct->quantity;
+            $orderDetails->colorID = $cartProduct->colorID;
+            $orderDetails->sizeID = $cartProduct->sizeID;
+            $orderDetails->productID = $cartProduct->productID;
+            $orderDetails->supplierID = $product->supplierID;
+            $order->orderdetails()->save($orderDetails);
+            $cartProduct->delete();
+        }
+//        DB::table('test')->insert(['test' => serialize(($request->all()))]);
         return response()->json(['status' => 'success']);
 
     }
 
+    public function getOrders(Request $request){
+        $customer = Customer::where('email',$request->email)->first();
+        $customerID = $customer->customerID;
+        $orders = Order::with(['orderdetails','orderdetails.size','orderdetails.color','orderdetails.product'])->where('customerID',$customerID)->get();
+        $finalOrders = [];
+        foreach ($orders as $order){
+            $obj['orderID'] = $order->orderID;
+            $obj['address'] = $order->address;
+            $obj['name'] = $order->name;
+            $obj['date'] = explode('-',explode(" ",$order->date)[0])[2].'-'.explode('-',explode(" ",$order->date)[0])[1].'-'.explode('-',explode(" ",$order->date)[0])[0];
+            $obj['status'] = $order->status;
+            foreach ($order->orderdetails as $orderdetail){
+                $image = Image::where('colorID',$orderdetail->colorID)->first();
+                $product = Product::find($orderdetail->productID);
+                $orderdetailObj = [];
+                $orderdetailObj['price'] = $orderdetail->quantity * $product->price;
+                $orderdetailObj['quantity'] = $orderdetail->quantity;
+                $orderdetailObj['color'] = $orderdetail->color->colorcode;
+                $orderdetailObj['size'] =$orderdetail->size->size ;
+                $orderdetailObj['image'] = $this->productImages . $image->image;
+                $orderdetailObj['productName'] = $orderdetail->product->productName;
+                $orderdetailObj['brand'] = $orderdetail->product->brand;
+                $obj['orderdetails'][] = $orderdetailObj;
+            }
+            $finalOrders[] = $obj;
+        }
+        return \response()->json(['Orders'=>$finalOrders],200);
+    }
+
     public function removeFavourite(Request $request)
     {
-        $favouriteID = (int)($request->favouriteID);
-        Favourite::where('favouriteID', $favouriteID)->delete();
+        $favouriteProductsID = json_decode($request->favouriteProductsID) ;
+        foreach ($favouriteProductsID as $favouriteID){
+            Favourite::where('favouriteID', (int) $favouriteID)->delete();
+        }
         return response()->json(['status' => 'success'], 200);
     }
 
@@ -421,35 +505,83 @@ class APIController extends Controller
 
     public function filterComponents(){
         $genders = ['Men', 'Women', 'Boys', 'Girls'];
-        $map = [];
-        for ($i = 0; $i < count($genders); $i++) {
-            $map[$genders[$i]] = 0;
-        }
-        $genders = [];
+        $categoryMap = [];
         $brands = $this->getUniqueBrands();
         $colors = $this->getUniqueColors();
         $sizes = $this->getUniqueSizes();
         $categories = Category::with(['products'])->get();
-        $categoriesNames = [];
         foreach ($categories as $key => $category) {
             if (count($category->products) == 0) {
                 unset($categories[$key]);
             } else {
-                $categoriesNames[] = $category->categoryName;
-                foreach ($category->products as $product) {
-                    if ($map[$product->gender] == 0) {
-                        $genders[] = $product->gender;
-                    }
-                    $map[$product->gender] = 1;
+                for ($i = 0; $i < count($genders); $i++) {
+                    $categoryMap[$genders[$i]][$category->categoryName] = 0 ;
                 }
             }
-            unset($category->products);
         }
-        return response()->json(['brands' => $brands,'colors'=>$colors,'sizes'=>$sizes,'categories'=>$categoriesNames,'genders'=>$genders],200);
+        $categoriesNames = [];
+        foreach ($categories as $key => $category) {
+            foreach ($category->products as $product) {
+                if($categoryMap[$product->gender][$category->categoryName] == 0){
+                    $categoriesNames[$product->gender][] = $category->categoryName;
+                }
+                $categoryMap[$product->gender][$category->categoryName] = 1 ;
+            }
+        }
+        return response()->json(['brands' => $brands,'colors'=>$colors,'sizes'=>$sizes,'categories'=>$categoriesNames],200);
     }
 
     public function filterBy(Request $request){
+        $products = Product::where(function ($query) use ($request) {
+            foreach ((array)$request->categories as $key => $category) {
+                if ($key == 0)
+                    $query->where('categoryID', $category);
+                else
+                    $query->orWhere('categoryID', $category);
+            }
+        })->where(function ($query) use ($request){
+            foreach ((array)$request->gender as $key => $gender) {
+                if ($key == 0)
+                    $query->where('gender', $gender);
+                else
+                    $query->orWhere('gender', $gender);
+            }
+        })->where(function ($query) use ($request){
+            foreach ((array)$request->brands as $key => $brand) {
+                if ($key == 0)
+                    $query->where('brand', $brand);
+                else
+                    $query->orWhere('brand', $brand);
+            }
+        })->with(['colors' => function ($query) use ($request) {
+            $query->where('productStatus', '1');
+            foreach ((array)$request->colors as $key => $color) {
+                if ($key == 0)
+                    $query->where('colorcode', $color);
+                else
+                    $query->orWhere('colorcode', $color);
+            }
 
+        }, 'colors.sizes' => function ($query) use ($request) {
+            $query->where('availableUnits', '>', 0);
+            foreach ((array)$request->sizes as $key => $size) {
+                if ($key == 0)
+                    $query->where('size', $size);
+                else
+                    $query->orWhere('size', $size);
+            }
+        }, 'colors.images'])->orderBy('price', $request->sortBy)->whereBetween('price', [(int)$request->min, (int)$request->max])->get();
+        return response()->json(['products' => $this->getPaginatedProducts($products, $request->index), 'stop' => $this->stop]);
+    }
+
+
+    public function sendLocation(Request $request){
+        $longitude = $request->longitude;
+        $latitude = $request->latitude;
+        $name = $request->name;
+        $phone = $request->phone;
+        $orderChannel = "Order".(string)$request->orderID;
+        $this->pusher->trigger($orderChannel, 'getLocation', ['name'=>$name,'phone'=>$phone,'latitude'=>$latitude,'longitude'=>$longitude]);
     }
 
     public function getPaginatedProducts($products, $index)

@@ -59,7 +59,7 @@
                                             });
                                             $.ajax({
                                                 type:'GET',
-                                                url:'{{route('cancelOrder')}}',
+                                                url:'{{route('cancelOrderProduct')}}',
                                                 data:{orderDetailID:'{{$orderDetail->orderdetailsID}}'},
                                                 success:function(data){
                                                     $('.rem{{intval($key)+1}}').fadeOut('slow', function(c){

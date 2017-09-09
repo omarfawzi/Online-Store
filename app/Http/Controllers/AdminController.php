@@ -108,6 +108,18 @@ class AdminController extends Controller
         ]);
     }
 
+    public function tracking($orderID){
+        if (Auth::guard('web')->user()->type == 'company') {
+            $order = Order::where('orderID', $orderID)->with(['orderdetails' => function ($query) {
+                $query->where('supplierID', Auth::guard('web')->user()->id);
+            }])->first();
+            if (count($order->orderdetails) == 0){
+                return back();
+            }
+        }
+     //   $this->pusher->trigger('tracking-channel', 'tracking', ['message' => 'Hello Omar']);
+        return view('tracking',['orderID'=>$orderID]);
+    }
     // HomePage after login
     public function index()
     {
@@ -115,7 +127,7 @@ class AdminController extends Controller
             $companies = User::where('type', 'company')->paginate(10);
             return view('adminPanel.companies', ['companies' => $companies]);
         } else {
-            return redirect(route('ApprovedProducts'));
+            return redirect()->route('ApprovedProducts');
         }
     }
 
@@ -688,6 +700,36 @@ class AdminController extends Controller
         return back();
     }
 
+    public function cancelOrder($orderID){
+        $orderDetails = Orderdetail::where('orderID',$orderID)->get();
+        foreach ($orderDetails as $orderDetail){
+            $color = Color::where('colorID',$orderDetail->colorID)->with(['sizes'])->first();
+            foreach ($color->sizes as $size){
+                if ($orderDetail->sizeID == $size->sizeID){
+                    $size->pivot->availableUnits += $orderDetail->quantity;
+                    $size->pivot->update();
+                    break;
+                }
+            }
+        }
+        Orderdetail::where('orderID',$orderID)->delete();
+        Order::where('orderID',$orderID)->delete();
+        return back();
+    }
+
+//    public function cancelOrderProduct($orderDetailID){
+//        $orderDetail = Orderdetail::find($orderDetailID);
+//        $color = Color::where('colorID',$orderDetail->colorID)->with(['sizes'])->first();
+//        foreach ($color->sizes as $size){
+//            if ($orderDetail->sizeID == $size->sizeID){
+//                $size->pivot->availableUnits += $orderDetail->quantity;
+//                $size->pivot->update();
+//                break;
+//            }
+//        }
+//        Orderdetail::where('orderdetailsID',$orderDetailID)->delete();
+//        return back();
+//    }
     // orders view
     public function orders()
     {

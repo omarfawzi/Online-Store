@@ -3,11 +3,9 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-$api = app('Dingo\Api\Routing\Router');
-//$token = 'ad1f44bb-1ff7-4f59-be6a-d4ffd72d45a3';
 
+// Website Routes
 Route::get('/','WebController@index')->name('index');
-
 Route::group(['prefix'=>'/'],function(){
     Route::group(['prefix'=>'auth','middleware'=>'App\Http\Middleware\WebRedirect'],function (){
         Route::get('{provider}', 'WebLoginController@redirectToProvider')->name('socialAuth');
@@ -30,6 +28,7 @@ Route::group(['prefix'=>'/'],function(){
         Route::post('placeOrder','WebController@placeOrder')->name('placeOrder');
         Route::post('customer_logout', 'WebLoginController@logout')->name('customer_logout');
         Route::get('myOrders/{orderID}','WebController@myOrders')->name('myOrders');
+        Route::get('cancelOrderProduct','WebController@cancelOrderProduct')->name('cancelOrderProduct');
         Route::get('cancelOrder','WebController@cancelOrder')->name('cancelOrder');
     });
     Route::get('sortList','WebController@sortList')->name('sortList');
@@ -63,6 +62,8 @@ Route::group(['prefix'=>'admin'],function (){
             Route::get('/reject/{colorID}',['uses'=>'AdminController@reject','as'=>'reject']);
             Route::post('/updateCategory',['uses' => 'AdminController@updateCategory', 'as' => 'updateCategory']);
             Route::get('/deleteCategory/{categoryID}',['uses' => 'AdminController@deleteCategory', 'as' => 'deleteCategory']);
+            Route::get('/cancelOrder/{orderID}',['uses' => 'AdminController@cancelOrder', 'as' => 'cancelOrder']);
+//            Route::get('/cancelOrderProduct/{$orderDetailID}',['uses' => 'AdminController@cancelOrderProduct', 'as' => 'cancelOrderProduct']);
         });
         Route::get('/ApprovedProducts',['uses' => 'AdminController@ApprovedProducts', 'as' => 'ApprovedProducts']);
         Route::get('/WaitingProducts',['uses' => 'AdminController@WaitingProducts', 'as' => 'WaitingProducts']);
@@ -76,36 +77,36 @@ Route::group(['prefix'=>'admin'],function (){
         Route::get('/removeImage/{colorID}/{imageID}',['uses' => 'AdminController@removeImage','as'=>'removeImage']);
         Route::get('/orders',['uses'=>'AdminController@orders','as'=>'orders']);
         Route::get('/orderDetails/{orderID}',['uses'=>'AdminController@orderDetails','as'=>'orderDetails']);
-        Route::get('/tracking',function(){
-            return view('tracking');
-        });
+        Route::get('/tracking/{orderID}',['uses'=>'AdminController@tracking','as'=>'tracking']);
+
     });
 });
 
 // API's routes
-$api->version('v1',function ($api){
-    $api->post('login','App\Http\Controllers\APIController@login');
-    $api->post('fbLogin','App\Http\Controllers\APIController@fbLogin');
-    $api->post('register','App\Http\Controllers\APIController@register');
-    $api->post('products','App\Http\Controllers\APIController@products');
-    $api->post('suppliers','App\Http\Controllers\APIController@suppliers');
-    $api->post('tracking','App\Http\Controllers\APIController@track');
-    $api->post('supplierProducts','App\Http\Controllers\APIController@supplierProducts');
-    $api->post('categoryProducts','App\Http\Controllers\APIController@categoryProducts');
-    $api->post('product','App\Http\Controllers\APIController@product');
-    $api->post('addFavourites','App\Http\Controllers\APIController@addFavourites');
-    $api->post('removeFavourite','App\Http\Controllers\APIController@removeFavourite');
-    $api->post('categories','App\Http\Controllers\APIController@categories');
-    $api->post('showFavourites','App\Http\Controllers\APIController@showFavourites');
-    $api->post('addToCart','App\Http\Controllers\APIController@addToCart');
-    $api->post('cartProductQuantity','App\Http\Controllers\APIController@cartProductQuantity');
-    $api->post('removeCartProduct','App\Http\Controllers\APIController@removeCartProduct');
-    $api->post('cartProducts','App\Http\Controllers\APIController@cartProducts');
-    $api->post('placeOrder','App\Http\Controllers\APIController@placeOrder');
-    $api->post('updateProfile','App\Http\Controllers\APIController@updateProfile');
-    $api->post('showProfile','App\Http\Controllers\APIController@showProfile');
-    $api->post('filterComponents','App\Http\Controllers\APIController@filterComponents');
-    $api->post('filterBy','App\Http\Controllers\APIController@filterBy');
+Route::group(['prefix'=>'api'],function (){
+    Route::post('login','APIController@login');
+    Route::post('fbLogin','APIController@fbLogin');
+    Route::post('register','APIController@register');
+    Route::post('products','APIController@products');
+    Route::post('suppliers','APIController@suppliers');
+    Route::post('supplierProducts','APIController@supplierProducts');
+    Route::post('categoryProducts','APIController@categoryProducts');
+    Route::post('product','APIController@product');
+    Route::post('addFavourites','APIController@addFavourites');
+    Route::post('removeFavourite','APIController@removeFavourite');
+    Route::post('categories','APIController@categories');
+    Route::post('showFavourites','APIController@showFavourites');
+    Route::post('addToCart','APIController@addToCart');
+    Route::post('cartProductQuantity','APIController@cartProductQuantity');
+    Route::post('removeCartProduct','APIController@removeCartProduct');
+    Route::post('cartProducts','APIController@cartProducts');
+    Route::post('placeOrder','APIController@placeOrder');
+    Route::post('getOrders','APIController@getOrders');
+    Route::post('updateProfile','APIController@updateProfile');
+    Route::post('showProfile','APIController@showProfile');
+    Route::post('filterComponents','APIController@filterComponents');
+    Route::post('filterBy','APIController@filterBy');
+    Route::post('sendLocation','APIController@sendLocation');
 });
 
 Route::any('{catchall}', function ($page) {

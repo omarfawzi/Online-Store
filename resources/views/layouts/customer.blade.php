@@ -408,17 +408,17 @@ $('#myModal88').modal('show');
                                           class="{{(Route::getCurrentRoute()->getName() == 'index')?'act':''}}">Home</a>
                     </li>
                     <!-- Mega Menu -->
-                    @foreach($categoriesWeb as $key => $category)
+                    @foreach($availableCategories as $key => $category)
                         <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{$key}}<b class="caret"></b></a>
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{strtoupper($key)}}<b class="caret"></b></a>
                             <ul class="dropdown-menu multi-column columns-3">
                                 <div class="row">
                                     <div class="col-sm-3">
                                         <ul class="multi-column-dropdown">
-                                            <h6>Categories</h6>
+                                            <h6>{{strtoupper($key)}} Fashion</h6>
                                             @foreach($category as $value)
                                                 <li>
-                                                    <a href="{{route('categoryProducts',['gender'=>$key,'categoryName'=>$value])}}">{{$value}}</a>
+                                                    <a href="{{route('categoryProducts',['gender'=>$key,'categoryName'=>$value])}}">{{strtoupper($value)}}</a>
                                                 </li>
                                             @endforeach
                                         </ul>
@@ -465,7 +465,9 @@ $('#myModal88').modal('show');
                         </li>
                     @endforeach
 
-                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="javascript:;">About Us</a></li>
+                    <li><a href="javascript:;">Mail Us</a></li>
+
                 </ul>
             </div>
         </nav>
@@ -512,9 +514,7 @@ $('#myModal88').modal('show');
                 <ul class="info">
                     <li><a href="about.html">About Us</a></li>
                     <li><a href="mail.html">Contact Us</a></li>
-                    <li><a href="short-codes.html">Short Codes</a></li>
                     <li><a href="faq.html">FAQ's</a></li>
-                    <li><a href="products.html">Special Products</a></li>
                 </ul>
             </div>
             {{--<div class="col-md-3 w3_footer_grid">--}}

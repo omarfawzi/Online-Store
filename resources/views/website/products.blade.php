@@ -101,7 +101,7 @@
                                                                    value="{{$category->categoryID}}" {{($checkedMap[$category->categoryID])?'checked':''}}>
                                                             <i></i>
                                                         </label>
-                                                        <span>{{$category->categoryName}}</span>
+                                                        <span>{{strtoupper($category->categoryName)}}</span>
                                                     </li>
                                                 @endforeach
                                             </ul>
@@ -132,7 +132,7 @@
                                                             <i></i><span class="colorSquare"
                                                                          style="background: {{$color->colorcode}};"> </span>&nbsp;
                                                         </label>
-                                                        <span>{{$colorNames[$key]}}</span>
+                                                        <span>{{strtoupper($colorNames[$key])}}</span>
                                                     </li>
                                                 @endforeach
                                             </ul>
@@ -190,7 +190,7 @@
                                                         <label style="display: inline" class="checkbox"><input value="{{$gender}}" type="checkbox" name="gender[]" {{($checkedMap[$gender])?'checked':''}}>
                                                             <i></i>
                                                         </label>
-                                                        <span>{{$gender}}</span>
+                                                        <span>{{strtoupper($gender)}}</span>
                                                     </li>
                                                     @endforeach
                                                 {{--<li>--}}
@@ -359,7 +359,7 @@
                                         </div>
                                     </div>
                                     <br>
-                                    <p style="color: grey;">{{$product->brand}}</p>
+                                    <p style="color: grey;">{{strtoupper($product->brand)}}</p>
                                     <h5 style="display: inline;"><a
                                                 href="{{route('singleProduct',['productName'=>$product->productName,'colorID'=>$product->colors[key(reset($product->colors))]->colorID])}}">{{$product->productName}}</a>
                                     </h5>
@@ -404,9 +404,16 @@
                     <div class="clearfix"></div>
                     <br>
                     <center><img id="loader" src="{{ asset('assets/admin/images/spinner.gif') }}"/></center>
+
                     <center>
                         <button id="loadMore" class="btn btn-primary btn-wd" style="width: 200px;">Load More</button>
                     </center>
+                    <script>
+                        @if(count($products) < 6)
+                            $('#loadMore').hide();
+                        @endif
+
+                    </script>
                 </div>
             </div>
         </div>

@@ -36,7 +36,7 @@ $(document).ready(function () {
                         " </li> " +
                         "</ul> " +
                         "</div> " + "</div> " + "<br> " +
-                        "<p style='color: grey;'>"+products[i].brand+"</p> " +
+                        "<p style='color: grey;'>"+products[i].brand.toUpperCase()+"</p> " +
                         "<h5 style='display: inline;'><a href='"+href+"'>"+products[i].productName+"</a></h5> " +
                         "<div class='simpleCart_shelfItem'> <small  style='color: grey;'>EGP&nbsp;"+products[i].price+"</small> <br> <br> "
                         + colors +

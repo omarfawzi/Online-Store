@@ -39,6 +39,8 @@
 
                                 <th>Price</th>
 
+                                {{--<th>Cancel Product</th>--}}
+
                                 </thead>
 
                                 <tbody>
@@ -64,6 +66,14 @@
                                         <td>{{$order->quantity}}</td>
 
                                         <td>EGP {{$order->product->price * $order->quantity }}</td>
+
+                                        {{--<td>--}}
+                                            {{--<a class="btn btn-danger btn-fill btn-sm" href="javascript:;" title="Cancel Order">--}}
+
+                                                {{--<span class="fa fa-remove"></span>--}}
+
+                                            {{--</a>--}}
+                                        {{--</td>--}}
 
                                     </tr>
 

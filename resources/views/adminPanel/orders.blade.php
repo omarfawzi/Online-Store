@@ -43,6 +43,8 @@
 
                                 <th>Track</th>
 
+                                <th>Cancel Order</th>
+
                                 </thead>
 
                                 <tbody>
@@ -77,6 +79,13 @@
                                                 <span class="fa fa-map-marker"></span>
 
                                             </button>
+                                        </td>
+                                        <td>
+                                            <a class="btn btn-danger btn-fill btn-sm" data-toggle="modal" data-target="#confirm-delete" data-href="{{route('cancelOrder',['orderID'=>$order->orderID])}}" title="Cancel Order">
+
+                                                <span class="fa fa-remove"></span>
+
+                                            </a>
                                         </td>
                                     </tr>
                                     </form>

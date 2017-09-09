@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Cartproduct;
+use App\Category;
 use App\Customer;
 use App\Notification;
 use App\Order;
@@ -21,18 +22,34 @@ class AppServiceProvider extends ServiceProvider
      * @return void
      */
     private $categories ;
-    public function setCategories()
+	
+    public function getCategories()
     {
-        $this->categories['Men'] = ['Shirts','T-Shirts','Trousers','Coats','Jackets','Footwear'];
-        $this->categories['Women'] = ['Dresses','Skirts','Shirts','T-Shirts','Trousers','Coats','Jackets','Footwear'];
-        $this->categories['Girls'] = ['Shirts','T-Shirts','Trousers','Coats','Jackets','Footwear','Pyjamas'];
-        $this->categories['Boys'] = ['Dresses','Skirts','Shirts','T-Shirts','Trousers','Coats','Jackets','Footwear','Pyjamas'];
+        $genders = ['Men','Women','Boys','Girls'];
+        $map = [];
+        $categories = Category::with(['products'])->get();
+        $ret = [];
+        foreach ($categories as $category){
+            for ($i = 0 ; $i < count($genders) ; $i++){
+                $map[$genders[$i]] = 0 ;
+            }
+            if (count($category->products) != 0){
+                foreach ($category->products as $product){
+                    if($map[$product->gender] == 0){
+                        $ret[$product->gender][] = $category->categoryName;
+                    }
+                    $map[$product->gender] = 1;
+                }
+            }
+        }
+        return $ret ;
     }
+	
     public function boot()
     {
-        $this->setCategories();
         Schema::defaultStringLength(191);
         \View::composer('*', function ($view) {
+            $availableCategories = $this->getCategories();
             if (Auth::guard('web')->check()) {
 //                $orders = null ;
 //                if (Auth::guard('web')->user()->type == 'admin')
@@ -59,7 +76,7 @@ class AppServiceProvider extends ServiceProvider
                 $view->with(['cartTotalPrice'=>$cartTotalPrice,'cartItemsCount'=>$itemsCount,'customer'=>$customer,'myOrders'=>$orders]);
 
             }
-            $view->with('categoriesWeb',$this->categories);
+            $view->with('availableCategories',$availableCategories);
         });
     }
 

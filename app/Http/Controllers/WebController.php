@@ -189,12 +189,14 @@ class WebController extends Controller
                 else
                     $query->orWhere('categoryID', $category);
             }
+        })->where(function ($query) use ($request){
             foreach ((array)$request->gender as $key => $gender) {
                 if ($key == 0)
                     $query->where('gender', $gender);
                 else
                     $query->orWhere('gender', $gender);
             }
+        })->where(function ($query) use ($request){
             foreach ((array)$request->brands as $key => $brand) {
                 if ($key == 0)
                     $query->where('brand', $brand);
@@ -238,7 +240,7 @@ class WebController extends Controller
             $query->where('colorID', $colorID);
         }, 'colors.images', 'colors.sizes' => function ($query) {
             $query->where('availableUnits', '>', 0);
-        }])->first();
+        },'supplier'])->first();
 
         $mainColorName = $colorConverter->getApproximateColorName($product->colors[0]->colorcode);
         $otherColorsNames = [];
@@ -339,7 +341,7 @@ class WebController extends Controller
         return response()->json(['msg' => $request->quantity], 200);
     }
 
-    public function emptyCart(Request $request)
+    public function emptyCart()
     {
         Cartproduct::where('customerID', Auth::guard('customer')->user()->customerID)->delete();
         return response()->json(['msg' => 'done']);
@@ -399,9 +401,17 @@ class WebController extends Controller
         return view('website.orders')->with(['orderDetails' => $order->orderdetails, 'colorNames' => $colorNames]);
     }
 
-    public function cancelOrder(Request $request)
+    public function cancelOrderProduct(Request $request)
     {
         $orderDetail = Orderdetail::find($request->orderDetailID);
+        $color = Color::where('colorID',$orderDetail->colorID)->with(['sizes'])->first();
+        foreach ($color->sizes as $size){
+            if ($orderDetail->sizeID == $size->sizeID){
+                $size->pivot->availableUnits += $orderDetail->quantity;
+                $size->pivot->update();
+                break;
+            }
+        }
         $orderID = $orderDetail->orderID;
         $orderDetail->delete();
         $order = Order::where('orderID', $orderID)->with(['orderdetails'])->first();
@@ -474,7 +484,7 @@ class WebController extends Controller
         }
         foreach ($brands as $brand) {
             if ($map[(string)$brand->brand] == 0) {
-                $uniqueBrands[] = $brand->brand;
+                $uniqueBrands[] = strtoupper($brand->brand);
             }
             $map[(string)$brand->brand]++;
         }
